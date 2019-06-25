@@ -19,18 +19,24 @@
 (tool-bar-mode -1)
 (scroll-bar-mode -1)
 (menu-bar-mode -1)
-(set-frame-font "Hack 10" nil t) ; Set font
-(global-display-line-numbers-mode)
-(setq-default display-line-numbers-width 3)
-(setq default-fill-column 80)
+(set-frame-font "Hack 10" nil t)
 (global-hl-line-mode 1)
 
+(defalias 'yes-or-no-p 'y-or-n-p)
+
+;; Editor
+(setq-default
+ indent-tabs-mode nil
+ tab-width 2
+ fill-column 80)
+(show-paren-mode t)
 
 ;; Misc Config
 (setq make-backup-files nil)
 (setq auto-save-default nil)
 (setq ring-bell-function 'ignore)
-
+(setq sentence-end-double-space nil)
+ 
 ;; Which Key
 (use-package which-key
   :init
@@ -39,26 +45,15 @@
   :config
   (which-key-mode))
 
-;; Keybindings
-(use-package general
-  :config (general-define-key
-  :states '(normal visual insert emacs)
-  ;(general-evil-setup t)
-  ;(general-define-key "C-'" 'avy-goto-word-1)
-  :prefix "SPC"
-  :non-normal-prefix "M-SPC"
-   ;; bind to simple key press
-  "bb" 'ivy-switch-buffer
-  "/" 'counsel-git-grep
-  ;; bind to double key press
-  "f" '(:ignore t :which-key "files")
-  "ff" 'counsel-find-file
-  "fr" 'counsel-recentf
-  "p" '(:ignore t :which-key "project")
-  "pt" 'counsel-projectile
-  "pp" 'counsel-projectile-switch-project
-  "pf" 'counsel-projectile-find-file
- ))
+;; Crux
+(use-package crux
+  :bind (("C-a" . crux-move-beginning-of-line)
+         ("C-k" . crux-smart-kill-line)
+         ("C-c I" . crux-find-user-init-file)
+         ("C-<backspace>" . crux-kill-whole-line-backwards)
+         ("C-S-o" . crux-smart-open-line-above)
+         ("C-o" . crux-smart-open-line)))
+
 
 ;; Theme
 (use-package atom-one-dark-theme
@@ -68,61 +63,51 @@
 (use-package doom-modeline
   :hook (after-init . doom-modeline-mode))
 
-(use-package avy
-  :commands (avy-goto-word-1))
-
-(use-package all-the-icons)
-
-(use-package ivy
-  :diminish (ivy-mode . "")
+;; Helm/Projectile
+(use-package helm
   :bind
-  (:map ivy-mode-map
-	("C-'" . ivy-avy))
+  (("C-c h" . helm-command-prefix)
+   ("C-x b" . helm-mini)
+   ("M-x" . helm-M-x)
+   ("C-x C-f" . helm-find-files))
   :config
-  (ivy-mode 1)
-  ;; add recentf-mode and bookmarks to ivy-switchibuffer
-  (setq ivy-use-virtual-buffers t)
-  (setq ivy-height 10)
-  (setq ivy-count-format "(%d/%d)"))
+  (require 'helm-config)
+  (bind-key "C-c h" helm-command-prefix)
+  (setq helm-quick-update t
+	helm-autoresize-mode t
+	helm-ff-skip-boring-files t)
+  (helm-mode t))
 
-(use-package counsel
-  :bind (("M-x" . counsel-M-x)))
-
-(use-package counsel-projectile
-  :after (counsel projectile)
-  :config (counsel-projectile-mode 1))
-
-(use-package all-the-icons-ivy
-  :config (all-the-icons-ivy-setup))
-
-(use-package ivy-rich
-  :init
-  (ivy-rich-mode 1)
+;; Describe bindings
+(use-package helm-descbinds
+  :bind ("C-h b" . helm-descbinds)
   :config
-  (setq ivy-format-function #'ivy-format-function-line))
+  (helm-descbinds-mode))
 
 (use-package projectile
+  :bind
+  (("C-c p f" . helm-projectile-find-file)
+   ("C-c p p" . helm-projectile-switch-project))
   :config
-  (projectile-mode))
-(setq projectile-completion-system 'ivy)
+  (projectile-global-mode)
+  (setq projectile-completion-system 'helm
+	projectile-enable-caching t
+	projectile-indexing-method 'alien))
 
-
-(use-package evil
-  :init
-  (setq evil-want-keybinding nil)
-  (setq evil-want-C-u-scroll t)
-  (setq evil-vsplit-window-right t)
-  (setq evil-split-window-below t)
-  (setq evil-shift-round nil)
+(use-package helm-projectile
   :config
-  (evil-mode 1))
+  (helm-projectile-on))
 
-(use-package evil-collection
-  :after evil
+;; Movement
+(use-package avy
+  :bind (("C-'" . avy-goto-char-2)
+	 ("M-g f" . avy-goto-line))
   :config
-  (evil-collection-init))
+  (setq avy-background t))
 
-(use-package evil-magit)
+(use-package expand-region
+  :bind (("C-=" . er/expand-region)
+         ("C-+" . er/contract-region)))
 
 (use-package adaptive-wrap
   :config
@@ -130,32 +115,52 @@
   (add-hook 'visual-line-mode-hook #'adaptive-wrap-prefix-mode)
   (global-visual-line-mode +1))
 
+;; Prog
+(use-package smartparens
+  :config
+  (add-hook 'prog-mode-hook 'smartparens-mode))
+
+(use-package aggressive-indent)
+
+;(use-package rainbow-delimiters
+ ; :hook (prog-mode . rainbow-delimiters-mode))
+
 ;; Web
 (use-package web-mode
   :mode (("\\.html?\\'" . web-mode))
   :config
+  (set-face-background 'web-mode-current-element-highlight-face "#3E4451")
+  (set-face-foreground 'web-mode-current-element-highlight-face nil)
   (setq web-mode-markup-indent-offset 2
 	web-mode-css-indent-offset 2
 	web-mode-code-indent-offset 4
-
 	web-mode-enable-css-coloraization t
 	web-mode-enable-auto-pairing t
-	web-mode-enable-current-element-highlight t
-	)
-  )
+	web-mode-enable-current-element-highlight t))
+
+(use-package css-mode
+  :custom (css-indent-offset 2))
+
+(use-package rainbow-mode
+  :hook (prog-mode))
+
+(use-package emmet-mode
+  :hook (css-mode web-mode))
 
 ;; Magit
 (use-package magit
   :bind ("C-x g" . magit-status))
-  
+
+(use-package shell-pop
+  :bind (("C-t" . shell-pop))
+  :config
+  (setq shell-pop-shell-type (quote ("ansi-term" "*ansi-term*" (lambda nil (ansi-term shell-pop-term-shell)))))
+  (setq shell-pop-term-shell "/usr/bin/fish")
+  ;; need to do this manually or not picked up by `shell-pop'
+  (shell-pop--set-shell-type 'shell-pop-shell-type shell-pop-shell-type))
+
+;; Org
 (use-package org-bullets
   :config (progn (add-hook 'org-mode-hook
 			   (lambda ()
 			     (org-bullets-mode 1)))))
-
-; (general-define-key
- ;; replace default keybindings
- ;"C-s" 'swiper         ; search for string in current buffer
- ;"M-x" 'counsel-M-x    ; replace default M-x with ivy backend
- ;)
-

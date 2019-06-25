@@ -2,6 +2,7 @@ auto-save-list/
 elpa/
 init.el.bak
 projectile-bookmarks.eld
+projectile.cache
 recentf
 straight/
 transient/
