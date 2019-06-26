@@ -10,6 +10,7 @@
   :config (auto-compile-on-load-mode))
 (setq load-prefer-newer t)
 #+END_SRC
+
 * UI
 ** Modeline
 #+BEGIN_SRC emacs-lisp
@@ -26,6 +27,7 @@
 (global-hl-line-mode 1)
 (defalias 'yes-or-no-p 'y-or-n-p)
 #+END_SRC
+
 ** Theme
 #+BEGIN_SRC emacs-lisp
   (use-package atom-one-dark-theme
@@ -35,6 +37,7 @@
     (set-face-foreground 'org-block-begin-line "#525E6C")
     :init(load-theme 'atom-one-dark t))
 #+END_SRC
+
 * Editor Settings
 #+BEGIN_SRC emacs-lisp
 (setq-default
@@ -56,6 +59,7 @@
 (setq x-select-enable-primary t)
 
 #+END_SRC
+
 * Base Packages
 ** adaptive-wrap
 #+BEGIN_SRC emacs-lisp
@@ -84,12 +88,14 @@
          ("C-S-o" . crux-smart-open-line-above)
          ("C-o" . crux-smart-open-line)))
 #+END_SRC
+
 ** Dashboard
 #+BEGIN_SRC emacs-lisp
 (use-package dashboard
   :config
   (dashboard-setup-startup-hook))
 #+END_SRC
+
 ** expand-region
 Quicker selection of text. Doesn't always work as I would like. Sometimes it goes from highlighting the line to highlighting the entire page which I dont like.
 #+begin_src emacs-lisp
@@ -97,6 +103,7 @@ Quicker selection of text. Doesn't always work as I would like. Sometimes it goe
     :bind (("C-=" . er/expand-region)
            ("C-+" . er/contract-region)))
 #+end_src
+
 ** shell-pop
 =C-t= pops up an ansi-term which works with fish. =C-d= closes the buffer.
 #+BEGIN_SRC emacs-lisp
@@ -108,6 +115,7 @@ Quicker selection of text. Doesn't always work as I would like. Sometimes it goe
   ;; need to do this manually or not picked up by `shell-pop'
   (shell-pop--set-shell-type 'shell-pop-shell-type shell-pop-shell-type))
 #+END_SRC
+
 ** which-key
 #+BEGIN_SRC emacs-lisp
 (use-package which-key
@@ -125,6 +133,7 @@ Quicker selection of text. Doesn't always work as I would like. Sometimes it goe
   :bind
   ("C-c SPC" .  ace-jump-mode))
 #+END_SRC
+
 ** avy
 #+BEGIN_SRC emacs-lisp  
 (use-package avy
@@ -194,17 +203,20 @@ Quicker selection of text. Doesn't always work as I would like. Sometimes it goe
 #+begin_src emacs-lisp
 (use-package aggressive-indent)
 #+end_src
+
 *** smartparens
 #+begin_src emacs-lisp
 (use-package smartparens
   :config
   (add-hook 'prog-mode-hook 'smartparens-mode))
 #+end_src
+
 ** Web
 #+BEGIN_SRC emacs-lisp
    (use-package rainbow-mode
   :hook (prog-mode))
 #+END_SRC
+
 *** HTML
 #+BEGIN_SRC emacs-lisp
 (use-package web-mode
@@ -225,12 +237,14 @@ Quicker selection of text. Doesn't always work as I would like. Sometimes it goe
     :init (setq emmet-move-cursor-between-quotes t))
   (add-hook 'web-mode-hook 'emmet-mode))
   #+END_SRC
+  
 *** CSS
 #+BEGIN_SRC emacs-lisp
 (use-package css-mode
   :config
 (setq css-indent-offset 2))
 #+END_SRC
+
 * Org
 #+BEGIN_SRC emacs-lisp
 (use-package org
