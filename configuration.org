@@ -13,22 +13,30 @@
 
 * UI
 ** Modeline
+I like doom-modeline. It's cool.
 #+BEGIN_SRC emacs-lisp
 (use-package doom-modeline
   :hook (after-init . doom-modeline-mode))
 #+END_SRC
 
 ** Settings
+Turn off all GUI menu stuff
 #+BEGIN_SRC emacs-lisp
 (tool-bar-mode -1)
 (scroll-bar-mode -1)
 (menu-bar-mode -1)
-(set-frame-font "Hack 10" nil t)
+
 (global-hl-line-mode 1)
 (defalias 'yes-or-no-p 'y-or-n-p)
 #+END_SRC
 
+** Font
+#+begin_src emacs-lisp
+  (set-frame-font "Hack 10" nil t)
+#+end_src
+
 ** Theme
+Gotta have aod everywhere
 #+BEGIN_SRC emacs-lisp
   (use-package atom-one-dark-theme
     :config
@@ -62,17 +70,16 @@
 
 * Base Packages
 ** adaptive-wrap
+Wrap lines but also keeps them indented
 #+BEGIN_SRC emacs-lisp
 (use-package adaptive-wrap
   :config
   (setq-default adaptive-wrap-extra-indent 1)
   (add-hook 'visual-line-mode-hook #'adaptive-wrap-prefix-mode)
   (global-visual-line-mode +1))
+#+END_SRC
 
-
-;(use-package rainbow-delimiters
- ; :hook (prog-mode . rainbow-delimiters-mode))
-#+END_SRC** Company
+** Company
 #+BEGIN_SRC emacs-lisp
 (use-package company
   :config
@@ -80,6 +87,7 @@
 #+END_SRC
 
 ** Crux
+Keybindings that help move around
 #+BEGIN_SRC emacs-lisp
 (use-package crux
   :bind (("C-a" . crux-move-beginning-of-line)
@@ -144,58 +152,74 @@ Quicker selection of text. Doesn't always work as I would like. Sometimes it goe
   (setq avy-background t))
 #+END_SRC
 
-** Helm
+** helm Packages
+I started initially with ivy but didn't like the way it looked. I think helm looks pretty dope and it doesn't seem slow to me... yet.
+*** helm
 #+BEGIN_SRC emacs-lisp
-(use-package helm
-  :init
-  (require 'helm-config)
-  :config
-  (bind-key "C-c h" helm-command-prefix)
-  (setq helm-quick-update t
-        helm-autoresize-mode t
-        helm-idle-delay 0.0
-        helm-input-idle-delay 0.01
-        helm-ff-skip-boring-files t)
-  (helm-mode t)
-  :bind
-  (("C-c h" . helm-command-prefix)
-   ("C-x b" . helm-mini)
-   ("M-x" . helm-M-x)
-   ("C-x C-f" . helm-find-files)
-   ("C-x v" . helm-projectile)))
+  (use-package helm
+    :init
+    (require 'helm-config)
+    :config
+    (bind-key "C-c h" helm-command-prefix)
+    (setq helm-quick-update t
+          helm-autoresize-mode t
+          helm-idle-delay 0.0
+          helm-input-idle-delay 0.01
+          helm-ff-skip-boring-files t)
+    (helm-mode t)
+    :bind
+    (("C-c h" . helm-command-prefix)
+     ("C-x b" . helm-mini)
+     ("M-x" . helm-M-x)
+     ("M-y" . helm-show-kill-ring)
+     ("C-x C-f" . helm-find-files)
+     ("C-x v" . helm-projectile)))
 #+END_SRC
 
+*** helm-descbinds
+Helm frontend for emacs' =describe-bindings= making the currently active key bindings interactively searchable.
 #+BEGIN_SRC emacs-lisp
-;; Describe bindings
 (use-package helm-descbinds
   :bind ("C-h b" . helm-descbinds)
   :config
   (helm-descbinds-mode))
 
-(use-package projectile
-  :bind
-  (("C-c p f" . helm-projectile-find-file)
-   ("C-c p p" . helm-projectile-switch-project))
-  :config
-  (projectile-global-mode)
-  (setq projectile-completion-system 'helm
-	projectile-enable-caching t
-	indexing-projectile-method 'alien))
 
+
+#+END_SRC
+  
+*** helm-projectile
+#+begin_src emacs-lisp
 (use-package helm-projectile
   :config
   (helm-projectile-on))
 
+
+#+end_src
+*** helm-swoop
+#+begin_src emacs-lisp
 (use-package helm-swoop
   :bind
   ("C-x c s" . helm-swoop))
-#+END_SRC
-  
+#+end_src
 ** magit
 #+BEGIN_SRC emacs-lisp
 (use-package magit
   :bind ("C-x g" . magit-status))
 #+END_SRC
+** projectile
+#+begin_src emacs-lisp
+(use-package projectile
+  :bind
+  (("C-c p f" . helm-projectile-find-file)
+   ("C-c p p" . helm-projectile-switch-project))
+
+  :config
+  (projectile-global-mode)
+  (setq projectile-completion-system 'helm
+	projectile-enable-caching t
+	indexing-projectile-method 'alien))
+#+end_src
 
 * Programming
 ** Environment
@@ -240,9 +264,9 @@ Quicker selection of text. Doesn't always work as I would like. Sometimes it goe
   
 *** CSS
 #+BEGIN_SRC emacs-lisp
-(use-package css-mode
-  :config
-(setq css-indent-offset 2))
+  (use-package css-mode
+    :config
+    (setq css-indent-offset 2))
 #+END_SRC
 
 * Org
@@ -267,3 +291,20 @@ Show some pretty bullets
 			   (lambda ()
 			     (org-bullets-mode 1)))))
 #+END_SRC
+
+* RSS
+Using =elfeed=
+I used newsboat in my terminal before but elfeed already seems like an upgrade. Since emacs uses a GUI, it means that pictures show.
+#+begin_src emacs-lisp
+  (use-package elfeed
+    :bind
+    ("C-x w" . elfeed))
+#+end_src
+
+Load up feeds with =elfeed-org=
+#+begin_src emacs-lisp
+  (use-package elfeed-org
+    :config
+    (elfeed-org)
+    (setq rmh-elfeed-org-files (list "~/org/feeds.org")))
+#+end_src
