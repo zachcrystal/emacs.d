@@ -20,13 +20,14 @@ I like doom-modeline. It's cool.
 #+END_SRC
 
 ** Settings
-Turn off all GUI menu stuff
+Turn off all GUI menu stuff and other general stuff
 #+BEGIN_SRC emacs-lisp
 (tool-bar-mode -1)
 (scroll-bar-mode -1)
 (menu-bar-mode -1)
 
 (global-hl-line-mode 1)
+
 (defalias 'yes-or-no-p 'y-or-n-p)
 #+END_SRC
 
@@ -48,25 +49,32 @@ Gotta have aod everywhere
 
 * Editor Settings
 #+BEGIN_SRC emacs-lisp
-(setq-default
- indent-tabs-mode nil
- tab-width 2
- fill-column 80)
-(show-paren-mode t)
+  (setq-default
+   indent-tabs-mode nil
+   tab-width 2
+   fill-column 80)
 
-;; Misc Config
-(setq make-backup-files nil)
-(setq auto-save-default nil)
-(setq ring-bell-function 'ignore)
-(setq sentence-end-double-space nil)
+  (show-paren-mode t)
 
-;; after copy Ctrl+c in Linux X11, you can paste by 'yank' in emacs
-(setq x-select-enable-clipboard t)
+  (set-default-coding-systems 'utf-8)
 
-;; after mouse selection in X11, you can paste by 'yank' in emacs
-(setq x-select-enable-primary t)
+  ;; Misc Config
+  (setq make-backup-files nil)
+  (setq auto-save-default nil)
+  (setq ring-bell-function 'ignore)
+  (setq sentence-end-double-space nil)
+
+  ;; after copy Ctrl+c in Linux X11, you can paste by 'yank' in emacs
+  (setq x-select-enable-clipboard t)
+
+  ;; after mouse selection in X11, you can paste by 'yank' in emacs
+  (setq x-select-enable-primary t)
 
 #+END_SRC
+When you have text selected, pressing a key replaces the current selected text
+#+begin_src emacs-lisp
+(delete-selection-mode t)
+#+end_src
 
 * Base Packages
 ** adaptive-wrap
