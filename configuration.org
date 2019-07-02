@@ -33,7 +33,7 @@ Turn off all GUI menu stuff and other general stuff
 
 ** Font
 #+begin_src emacs-lisp
-  (set-frame-font "Hack 10" nil t)
+(set-frame-font "Iosevka 10" nil t)
 #+end_src
 
 ** Theme
@@ -49,27 +49,27 @@ Gotta have aod everywhere
 
 * Editor Settings
 #+BEGIN_SRC emacs-lisp
-  (setq-default
-   indent-tabs-mode nil
-   tab-width 2
-   fill-column 80)
+(setq-default
+ indent-tabs-mode nil
+ tab-width 2
+ fill-column 80
+ c-basic-offset 2)
 
-  (show-paren-mode t)
+(show-paren-mode t)
+(electric-pair-mode 1)
+(set-default-coding-systems 'utf-8)
 
-  (set-default-coding-systems 'utf-8)
+;; Misc Config
+(setq make-backup-files nil)
+(setq auto-save-default nil)
+(setq ring-bell-function 'ignore)
+(setq sentence-end-double-space nil)
 
-  ;; Misc Config
-  (setq make-backup-files nil)
-  (setq auto-save-default nil)
-  (setq ring-bell-function 'ignore)
-  (setq sentence-end-double-space nil)
+;; after copy Ctrl+c in Linux X11, you can paste by 'yank' in emacs
+(setq x-select-enable-clipboard t)
 
-  ;; after copy Ctrl+c in Linux X11, you can paste by 'yank' in emacs
-  (setq x-select-enable-clipboard t)
-
-  ;; after mouse selection in X11, you can paste by 'yank' in emacs
-  (setq x-select-enable-primary t)
-
+;; after mouse selection in X11, you can paste by 'yank' in emacs
+(setq x-select-enable-primary t)
 #+END_SRC
 When you have text selected, pressing a key replaces the current selected text
 #+begin_src emacs-lisp
@@ -102,7 +102,10 @@ Keybindings that help move around
          ("C-k" . crux-smart-kill-line)
          ("C-c I" . crux-find-user-init-file)
          ("C-S-o" . crux-smart-open-line-above)
-         ("C-o" . crux-smart-open-line)))
+         ("C-o" . crux-smart-open-line)
+         ("C-c d" . crux-duplicate-current-line-or-region)
+         ("C-c M-d" . crux-duplicate-and-comment-current-line-or-region)
+         ("C-c n" . crux-cleanup-buffer-or-region)))
 #+END_SRC
 
 ** Dashboard
@@ -131,6 +134,14 @@ Quicker selection of text. Doesn't always work as I would like. Sometimes it goe
   ;; need to do this manually or not picked up by `shell-pop'
   (shell-pop--set-shell-type 'shell-pop-shell-type shell-pop-shell-type))
 #+END_SRC
+
+** undo-tree
+#+begin_src emacs-lisp
+  (use-package undo-tree
+    :bind ("C-x u" . undo-tree-visualize)
+    :config
+    (global-undo-tree-mode t))
+#+end_src
 
 ** which-key
 #+BEGIN_SRC emacs-lisp
@@ -181,7 +192,8 @@ I started initially with ivy but didn't like the way it looked. I think helm loo
      ("M-x" . helm-M-x)
      ("M-y" . helm-show-kill-ring)
      ("C-x C-f" . helm-find-files)
-     ("C-x v" . helm-projectile)))
+     ("C-x v" . helm-projectile)
+     ("C-x c o" . helm-occur)))
 #+END_SRC
 
 *** helm-descbinds
@@ -204,17 +216,19 @@ Helm frontend for emacs' =describe-bindings= making the currently active key bin
 
 
 #+end_src
-*** helm-swoop
-#+begin_src emacs-lisp
-(use-package helm-swoop
-  :bind
-  ("C-x c s" . helm-swoop))
-#+end_src
 ** magit
 #+BEGIN_SRC emacs-lisp
 (use-package magit
   :bind ("C-x g" . magit-status))
 #+END_SRC
+** diff-hl
+#+begin_src emacs-lisp
+(use-package diff-hl
+  :config
+  (global-diff-hl-mode t)
+  (add-hook 'magit-post-refresh-hook 'diff-hl-magit-post-refresh))
+#+end_src
+
 ** projectile
 #+begin_src emacs-lisp
 (use-package projectile
@@ -240,12 +254,34 @@ Helm frontend for emacs' =describe-bindings= making the currently active key bin
 #+begin_src emacs-lisp
 (use-package smartparens
   :config
+  (setq sp-highlight-pair-overlay nil)
   (add-hook 'prog-mode-hook 'smartparens-mode))
+#+end_src
+
+** Linter
+Flycheck provides 'on the fly' syntax checking for many languages. I've seen other keep flycheck disabled globally and instead enable it for specific language modes in their section of the config.
+#+begin_src emacs-lisp
+(use-package flycheck)
+#+end_src
+
+** LSP
+I'm used to using LSPs in vim so naturally I'll check it out here
+#+begin_src emacs-lisp
+(use-package lsp-mode
+  :hook((java-mode) . lsp)
+  :commands lsp)
+
+(use-package lsp-ui 
+  :commands lsp-ui-mode
+  :config
+  (setq lsp-ui-sideline-show-code-actions nil))
+(use-package company-lsp :commands company-lsp)
+(use-package helm-lsp :commands helm-lsp-workspace-symbol)
 #+end_src
 
 ** Web
 #+BEGIN_SRC emacs-lisp
-   (use-package rainbow-mode
+(use-package rainbow-mode
   :hook (prog-mode))
 #+END_SRC
 
@@ -272,10 +308,19 @@ Helm frontend for emacs' =describe-bindings= making the currently active key bin
   
 *** CSS
 #+BEGIN_SRC emacs-lisp
-  (use-package css-mode
-    :config
-    (setq css-indent-offset 2))
+(use-package css-mode
+  :config
+  (setq css-indent-offset 2))
 #+END_SRC
+
+** Java
+#+begin_src emacs-lisp
+(use-package lsp-java
+  :after lsp
+  :config
+  (add-hook 'java-mode-hook 'lsp)
+  (setq lsp-java--workspace-folders (list "~/Learning/interview/")))
+#+end_src
 
 * Org
 #+BEGIN_SRC emacs-lisp
@@ -284,12 +329,18 @@ Helm frontend for emacs' =describe-bindings= making the currently active key bin
   :config
   (setq org-startup-indented t)
   (setq org-src-fontify-natively t)
-  (setq org-src-tab-acts-natively t))
+  (setq org-src-tab-acts-natively t)
+  (setq org-src-window-setup 'current-window)
+  (setq org-src-preserve-indentation t)
+  (setq org-hide-emphasis-markers t)
+
+  (org-babel-do-load-languages
+   'org-babel-load-languages
+   '((java . t))))
 ;(require 'org-tempo)
 
 (add-to-list 'org-structure-template-alist
              '("el" . "src emacs-lisp"))
-
 #+END_SRC
 
 Show some pretty bullets
@@ -300,19 +351,33 @@ Show some pretty bullets
 			     (org-bullets-mode 1)))))
 #+END_SRC
 
+** Org Babel
+The following function enables lsp when you open a src block within org-mode using =C-c '=
+#+begin_src emacs-lisp
+(defun org-babel-edit-prep:java (babel-info)
+  (setq-local buffer-file-name (->> babel-info caddr (alist-get :file-name)))
+  (setq-local lsp-buffer-uri (->> babel-info caddr (alist-get :file-name) lsp--path-to-uri))
+  (lsp)
+  (push 'company-lsp company-backends)
+  (lsp-ui-mode t)
+  (flycheck-mode t)
+  (company-mode t)
+  (lsp-ui-flycheck-enable t))
+#+end_src
+
 * RSS
 Using =elfeed=
 I used newsboat in my terminal before but elfeed already seems like an upgrade. Since emacs uses a GUI, it means that pictures show.
 #+begin_src emacs-lisp
-  (use-package elfeed
-    :bind
-    ("C-x w" . elfeed))
+(use-package elfeed
+  :bind
+  ("C-x w" . elfeed))
 #+end_src
 
 Load up feeds with =elfeed-org=
 #+begin_src emacs-lisp
-  (use-package elfeed-org
-    :config
-    (elfeed-org)
-    (setq rmh-elfeed-org-files (list "~/org/feeds.org")))
+(use-package elfeed-org
+  :config
+  (elfeed-org)
+  (setq rmh-elfeed-org-files (list "~/org/feeds.org")))
 #+end_src

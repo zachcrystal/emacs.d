@@ -19,10 +19,9 @@
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- '(css-indent-offset 2)
  '(package-selected-packages
    (quote
-    (emmet-mode org-plus-contrib which-key web-mode use-package smartparens shell-pop rainbow-mode org-bullets magit helm-swoop helm-projectile helm-descbinds expand-region doom-modeline dashboard crux company avy auto-compile atom-one-dark-theme aggressive-indent adaptive-wrap ace-jump-mode))))
+    (diff-hl which-key web-mode use-package undo-tree smartparens shell-pop rainbow-mode org-plus-contrib org-bullets magit lsp-ui lsp-java helm-swoop helm-projectile helm-lsp helm-descbinds flycheck expand-region emmet-mode elfeed-org doom-modeline dashboard crux company-lsp bug-hunter avy auto-compile atom-one-dark-theme aggressive-indent adaptive-wrap ace-jump-mode))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
