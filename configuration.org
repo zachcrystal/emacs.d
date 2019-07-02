@@ -87,6 +87,13 @@ Wrap lines but also keeps them indented
   (global-visual-line-mode +1))
 #+END_SRC
 
+** alert
+#+begin_src emacs-lisp
+(use-package alert
+  :config
+  (setq alert-default-style 'libnotify))
+#+end_src
+
 ** Company
 #+BEGIN_SRC emacs-lisp
 (use-package company
@@ -326,6 +333,8 @@ I'm used to using LSPs in vim so naturally I'll check it out here
 #+BEGIN_SRC emacs-lisp
 (use-package org
   :ensure org-plus-contrib
+  :bind (("C-c a" . org-agenda)
+         ("C-c c" . org-capture))
   :config
   (setq org-startup-indented t)
   (setq org-src-fontify-natively t)
@@ -343,6 +352,7 @@ I'm used to using LSPs in vim so naturally I'll check it out here
              '("el" . "src emacs-lisp"))
 #+END_SRC
 
+** org-bullets
 Show some pretty bullets
 #+BEGIN_SRC emacs-lisp
 (use-package org-bullets
@@ -351,7 +361,7 @@ Show some pretty bullets
 			     (org-bullets-mode 1)))))
 #+END_SRC
 
-** Org Babel
+** org-babel
 The following function enables lsp when you open a src block within org-mode using =C-c '=
 #+begin_src emacs-lisp
 (defun org-babel-edit-prep:java (babel-info)
@@ -363,6 +373,14 @@ The following function enables lsp when you open a src block within org-mode usi
   (flycheck-mode t)
   (company-mode t)
   (lsp-ui-flycheck-enable t))
+#+end_src
+
+** org-alert
+#+begin_src emacs-lisp
+(use-package org-alert
+  :config
+  (setq org-alert-interval 600)
+  (org-alert-enable))
 #+end_src
 
 * RSS
