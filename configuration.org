@@ -47,6 +47,15 @@ Gotta have aod everywhere
     :init(load-theme 'atom-one-dark t))
 #+END_SRC
 
+** Scrolling
+Is this even doing anything?
+#+begin_src emacs-lisp
+(setq scroll-margin 0
+      scroll-conservatively 10000
+      scroll-preserve-screen-position t
+      auto-window-vscroll nil)
+#+end_src
+
 * Editor Settings
 #+BEGIN_SRC emacs-lisp
 (setq-default
@@ -160,6 +169,15 @@ Quicker selection of text. Doesn't always work as I would like. Sometimes it goe
   (which-key-mode))
 #+END_SRC
 
+** yasnippet
+#+begin_src emacs-lisp
+(use-package yasnippet
+  :config
+  (yas-global-mode))
+
+(use-package yasnippet-snippets)
+#+end_src
+
 * Project Management
 ** ace-jump-mode
 #+BEGIN_SRC emacs-lisp
@@ -171,12 +189,21 @@ Quicker selection of text. Doesn't always work as I would like. Sometimes it goe
 ** avy
 #+BEGIN_SRC emacs-lisp  
 (use-package avy
-  :bind (("C-'" . avy-goto-char-2)
+  :bind (("C-:" . avy-goto-char)
+         ("C-'" . avy-goto-char-2)
          ("M-g f" . avy-goto-line)
          ("M-g w" . avy-goto-word-1))
   :config
   (setq avy-background t))
 #+END_SRC
+
+** diff-hl
+#+begin_src emacs-lisp
+(use-package diff-hl
+  :config
+  (global-diff-hl-mode t)
+  (add-hook 'magit-post-refresh-hook 'diff-hl-magit-post-refresh))
+#+end_src
 
 ** helm Packages
 I started initially with ivy but didn't like the way it looked. I think helm looks pretty dope and it doesn't seem slow to me... yet.
@@ -228,14 +255,6 @@ Helm frontend for emacs' =describe-bindings= making the currently active key bin
 (use-package magit
   :bind ("C-x g" . magit-status))
 #+END_SRC
-** diff-hl
-#+begin_src emacs-lisp
-(use-package diff-hl
-  :config
-  (global-diff-hl-mode t)
-  (add-hook 'magit-post-refresh-hook 'diff-hl-magit-post-refresh))
-#+end_src
-
 ** projectile
 #+begin_src emacs-lisp
 (use-package projectile
