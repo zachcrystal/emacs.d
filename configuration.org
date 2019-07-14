@@ -11,13 +11,55 @@
 (setq load-prefer-newer t)
 #+END_SRC
 
+* Misc
+** Personal Info
+#+begin_src emacs-lisp
+(setq user-full-name "Zach Crystal"
+      user-full-address "zachcrystal@gmail.com")
+#+end_src
+
+** Custom.el
+Put all the customize code in its own separate file, instead of it cluttering init.el
+#+begin_src emacs-lisp
+(setq custom-file (expand-file-name "custom.el" user-emacs-directory))
+(load custom-file 'noerror)
+#+end_src
+
+** Garbage Collector
+#+begin_src emacs-lisp
+(use-package gcmh
+  :init
+  (gcmh-mode 1))
+#+end_src
+
 * UI
+** Font
+#+begin_src emacs-lisp
+(set-frame-font "Iosevka 10" nil t)
+#+end_src
+
 ** Modeline
 I like doom-modeline. It's cool.
 #+BEGIN_SRC emacs-lisp
 (use-package doom-modeline
   :hook (after-init . doom-modeline-mode))
 #+END_SRC
+
+** paradox
+#+begin_src emacs-lisp
+(use-package paradox
+  :config
+  (paradox-enable))
+#+end_src
+
+** Scrolling
+Is this even doing anything?
+#+begin_src emacs-lisp
+(setq scroll-margin 0
+      scroll-conservatively 10000
+      scroll-preserve-screen-position t
+      auto-window-vscroll nil)
+#+end_src
 
 ** Settings
 Turn off all GUI menu stuff and other general stuff
@@ -31,11 +73,6 @@ Turn off all GUI menu stuff and other general stuff
 (defalias 'yes-or-no-p 'y-or-n-p)
 #+END_SRC
 
-** Font
-#+begin_src emacs-lisp
-(set-frame-font "Iosevka 10" nil t)
-#+end_src
-
 ** Theme
 Gotta have aod everywhere
 #+BEGIN_SRC emacs-lisp
@@ -47,13 +84,16 @@ Gotta have aod everywhere
     :init(load-theme 'atom-one-dark t))
 #+END_SRC
 
-** Scrolling
-Is this even doing anything?
+** Icons
 #+begin_src emacs-lisp
-(setq scroll-margin 0
-      scroll-conservatively 10000
-      scroll-preserve-screen-position t
-      auto-window-vscroll nil)
+(use-package all-the-icons)
+
+(use-package all-the-icons-ivy
+  :after ivy
+  :custom
+  (all-the-icons-ivy-buffer-commands '() "Don't use for buffers.")
+  :config
+  (all-the-icons-ivy-setup))
 #+end_src
 
 * Editor Settings
@@ -62,7 +102,9 @@ Is this even doing anything?
  indent-tabs-mode nil
  tab-width 2
  fill-column 80
- c-basic-offset 2)
+ c-basic-offset 2
+ scroll-step 1
+ enable-recursive-minibuffers t)
 
 (show-paren-mode t)
 (electric-pair-mode 1)
@@ -80,6 +122,7 @@ Is this even doing anything?
 ;; after mouse selection in X11, you can paste by 'yank' in emacs
 (setq x-select-enable-primary t)
 #+END_SRC
+
 When you have text selected, pressing a key replaces the current selected text
 #+begin_src emacs-lisp
 (delete-selection-mode t)
@@ -106,8 +149,18 @@ Wrap lines but also keeps them indented
 ** Company
 #+BEGIN_SRC emacs-lisp
 (use-package company
+  :bind
+  (:map company-active-map
+        ("C-n" . company-select-next-or-abort)
+        ("C-p" . company-select-previous-or-abort))
+  :hook
+  (after-init . global-company-mode))
+
+(use-package company-quickhelp
+  :custom
+  (company-quickhelp-delay 3)
   :config
-  (add-hook 'after-init-hook 'global-company-mode))
+  (company-quickhelp-mode 1))
 #+END_SRC
 
 ** Crux
@@ -134,9 +187,21 @@ Keybindings that help move around
 ** expand-region
 Quicker selection of text. Doesn't always work as I would like. Sometimes it goes from highlighting the line to highlighting the entire page which I dont like.
 #+begin_src emacs-lisp
-  (use-package expand-region
-    :bind (("C-=" . er/expand-region)
-           ("C-+" . er/contract-region)))
+(use-package expand-region
+  :bind
+  (("C-=" . er/expand-region)
+   ("C-+" . er/contract-region)
+   :map mode-specific-map
+   :prefix-map region-prefix-map
+   :prefix "r"
+   ("(" . er/mark-inside-pairs)
+   (")" . er/mark-outside-pairs)
+   ("'" . er/mark-inside-quotes)
+   ([34] . er/mark-outside-quotes) ; it's just a quotation mark
+   ("u" . er/mark-url)))
+
+
+
 #+end_src
 
 ** shell-pop
@@ -163,8 +228,8 @@ Quicker selection of text. Doesn't always work as I would like. Sometimes it goe
 #+BEGIN_SRC emacs-lisp
 (use-package which-key
   :init
-  (setq which-key-separator " ")
-  (setq which-key-prefix-prefix "+")
+  ;(setq which-key-separator " ")
+  ;(setq which-key-prefix-prefix "+")
   :config
   (which-key-mode))
 #+END_SRC
@@ -179,13 +244,6 @@ Quicker selection of text. Doesn't always work as I would like. Sometimes it goe
 #+end_src
 
 * Project Management
-** ace-jump-mode
-#+BEGIN_SRC emacs-lisp
-(use-package ace-jump-mode
-  :bind
-  ("C-c SPC" .  ace-jump-mode))
-#+END_SRC
-
 ** avy
 #+BEGIN_SRC emacs-lisp  
 (use-package avy
@@ -195,8 +253,30 @@ Quicker selection of text. Doesn't always work as I would like. Sometimes it goe
          ("M-g w" . avy-goto-word-1))
   :config
   (setq avy-background t))
+
+(use-package avy-zap
+  :bind
+  ([remap zap-to-char] . avy-zap-to-char))
 #+END_SRC
 
+** ace-window
+#+begin_src emacs-lisp
+(use-package ace-window
+  :custom
+  (aw-keys '(?a ?s ?d ?f ?g ?h ?j ?k ?l) "Use home row for selecting")
+  (aw-scope 'frame "Highlight only current frame.")
+  :bind
+  ("M-o" . ace-window))
+#+end_src
+
+** ace-jump-buffer
+#+begin_src emacs-lisp
+(use-package ace-jump-buffer
+  :bind
+  (:map goto-map
+        ("b" . ace-jump-buffer)))
+#+end_src
+   
 ** diff-hl
 #+begin_src emacs-lisp
 (use-package diff-hl
@@ -205,51 +285,47 @@ Quicker selection of text. Doesn't always work as I would like. Sometimes it goe
   (add-hook 'magit-post-refresh-hook 'diff-hl-magit-post-refresh))
 #+end_src
 
-** helm Packages
-I started initially with ivy but didn't like the way it looked. I think helm looks pretty dope and it doesn't seem slow to me... yet.
-*** helm
-#+BEGIN_SRC emacs-lisp
-  (use-package helm
-    :init
-    (require 'helm-config)
-    :config
-    (bind-key "C-c h" helm-command-prefix)
-    (setq helm-quick-update t
-          helm-autoresize-mode t
-          helm-idle-delay 0.0
-          helm-input-idle-delay 0.01
-          helm-ff-skip-boring-files t)
-    (helm-mode t)
-    :bind
-    (("C-c h" . helm-command-prefix)
-     ("C-x b" . helm-mini)
-     ("M-x" . helm-M-x)
-     ("M-y" . helm-show-kill-ring)
-     ("C-x C-f" . helm-find-files)
-     ("C-x v" . helm-projectile)
-     ("C-x c o" . helm-occur)))
-#+END_SRC
-
-*** helm-descbinds
-Helm frontend for emacs' =describe-bindings= making the currently active key bindings interactively searchable.
-#+BEGIN_SRC emacs-lisp
-(use-package helm-descbinds
-  :bind ("C-h b" . helm-descbinds)
-  :config
-  (helm-descbinds-mode))
-
-
-
-#+END_SRC
-  
-*** helm-projectile
+** Minibuffer
 #+begin_src emacs-lisp
-(use-package helm-projectile
-  :config
-  (helm-projectile-on))
+(use-package smex)
 
+(use-package flx) ; Fuzzy search
+
+(use-package ivy
+  :custom
+  (ivy-count-format "%d/%d " "Show anzu-like counter")
+  (ivy-use-selectable-prompt t "Press C-p when you're on the first candidate to select input")
+  :custom-face
+  (ivy-current-match ((t (:inherit 'hl-line))))
+  :bind
+  (:map mode-specific-map
+        ("C-r" . ivy-resume))
+  :config
+  (ivy-mode t))
+
+(use-package counsel
+  :bind
+  (([remap isearch-forward] . counsel-grep-or-swiper)
+  :map mode-specific-map
+  :prefix-map counsel-prefix-map
+  :prefix "c"
+  ("a" . counsel-apropos)
+  ("f" . counsel-file-jump)
+  ("g". counsel-org-goto)
+  ("p" . counsel-package)
+  :map help-map
+  ("F" . counsel-describe-face))
+  :init
+  (counsel-mode))
+
+(use-package swiper)
+
+(use-package ivy-rich
+  :config
+  (ivy-rich-mode 1))
 
 #+end_src
+
 ** magit
 #+BEGIN_SRC emacs-lisp
 (use-package magit
@@ -259,14 +335,20 @@ Helm frontend for emacs' =describe-bindings= making the currently active key bin
 #+begin_src emacs-lisp
 (use-package projectile
   :bind
-  (("C-c p f" . helm-projectile-find-file)
-   ("C-c p p" . helm-projectile-switch-project))
+  (:map mode-specific-map ("p" . projectile-command-map))
+  :custom
+  (projectile-project-root-files-functions
+   '(projectile-root-local
+     projectile-root-top-down
+     projectile-root-bottom-up
+     projectile-root-top-down-recurring))
+  (projectile-completion-system 'ivy)
+  (projectile-mode +1))
 
+(use-package counsel-projectile
+  :after counsel projectile
   :config
-  (projectile-global-mode)
-  (setq projectile-completion-system 'helm
-	projectile-enable-caching t
-	indexing-projectile-method 'alien))
+  (counsel-projectile-mode))
 #+end_src
 
 * Programming
@@ -284,10 +366,18 @@ Helm frontend for emacs' =describe-bindings= making the currently active key bin
   (add-hook 'prog-mode-hook 'smartparens-mode))
 #+end_src
 
+*** rainbow-mode
+#+BEGIN_SRC emacs-lisp
+(use-package rainbow-mode
+  :hook (prog-mode))
+#+END_SRC
 ** Linter
 Flycheck provides 'on the fly' syntax checking for many languages. I've seen other keep flycheck disabled globally and instead enable it for specific language modes in their section of the config.
+Edit**: I'm going to turn it on for prog-mode
 #+begin_src emacs-lisp
-(use-package flycheck)
+(use-package flycheck
+  :hook
+  (prog-mode . flycheck-mode))
 #+end_src
 
 ** LSP
@@ -305,12 +395,7 @@ I'm used to using LSPs in vim so naturally I'll check it out here
 (use-package helm-lsp :commands helm-lsp-workspace-symbol)
 #+end_src
 
-** Web
-#+BEGIN_SRC emacs-lisp
-(use-package rainbow-mode
-  :hook (prog-mode))
-#+END_SRC
-
+** Languages
 *** HTML
 #+BEGIN_SRC emacs-lisp
 (use-package web-mode
@@ -325,11 +410,16 @@ I'm used to using LSPs in vim so naturally I'll check it out here
         web-mode-code-indent-offset 2
         web-mode-enable-css-coloraization t
         web-mode-enable-auto-pairing t
-        web-mode-enable-current-element-highlight t)
+        web-mode-enable-current-element-highlight t))
 
-  (use-package emmet-mode
-    :init (setq emmet-move-cursor-between-quotes t))
-  (add-hook 'web-mode-hook 'emmet-mode))
+(use-package emmet-mode
+  :init
+  (setq emmet-move-cursor-between-quotes t)
+  :hook web-mode)
+
+
+
+;  (add-hook 'web-mode-hook 'emmet-mode))
   #+END_SRC
   
 *** CSS
@@ -339,23 +429,48 @@ I'm used to using LSPs in vim so naturally I'll check it out here
   (setq css-indent-offset 2))
 #+END_SRC
 
-** Java
-#+begin_src emacs-lisp
+*** Java
+ #+begin_src emacs-lisp
 (use-package lsp-java
   :after lsp
   :config
   (add-hook 'java-mode-hook 'lsp)
   (setq lsp-java--workspace-folders (list "~/Learning/interview/")))
-#+end_src
+ #+end_src
 
+*** Javascript
+
+ #+begin_src emacs-lisp
+(use-package prettier-js
+  :custom
+  (prettier-js-args '("--print-width" "100"
+                      "--trailing-comma" "all")))
+
+(use-package js2-mode
+  :hook ((js2-mode . js2-imenu-extras-mode)
+         (js2-mode . prettier-js-mode))
+  :mode "\\.js'"
+  :custom
+  (js-indent-level 2))
+
+(use-package js2-refactor
+  :hook (js2-mode . js2-refactor-mode)
+  :config
+  (js2r-add-keybindings-with-prefix "C-c C-m"))
+ #+end_src
+
+*** JSON
+#+begin_src emacs-lisp
+(use-package json-mode
+  :defer t)
+#+end_src
 * Org
 #+BEGIN_SRC emacs-lisp
 (use-package org
   :ensure org-plus-contrib
-  :bind (("C-c a" . org-agenda)
-         ("C-c c" . org-capture))
+  :bind (("C-c a" . org-agenda))
   :config
-  (setq org-startup-indented t)
+  ;(setq org-startup-indented t)
   (setq org-src-fontify-natively t)
   (setq org-src-tab-acts-natively t)
   (setq org-src-window-setup 'current-window)
@@ -375,9 +490,7 @@ I'm used to using LSPs in vim so naturally I'll check it out here
 Show some pretty bullets
 #+BEGIN_SRC emacs-lisp
 (use-package org-bullets
-  :config (progn (add-hook 'org-mode-hook
-			   (lambda ()
-			     (org-bullets-mode 1)))))
+  :hook (org-mode . org-bullets-mode))
 #+END_SRC
 
 ** org-babel
@@ -417,4 +530,12 @@ Load up feeds with =elfeed-org=
   :config
   (elfeed-org)
   (setq rmh-elfeed-org-files (list "~/org/feeds.org")))
+#+end_src
+* Media
+** pdf
+#+begin_src emacs-lisp
+(use-package pdf-tools
+  :mode ("\\.pdf\\'" . pdf-view-mode)
+  :config
+  (pdf-loader-install))
 #+end_src
