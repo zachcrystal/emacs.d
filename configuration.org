@@ -416,11 +416,7 @@ I'm used to using LSPs in vim so naturally I'll check it out here
   :init
   (setq emmet-move-cursor-between-quotes t)
   :hook web-mode)
-
-
-
-;  (add-hook 'web-mode-hook 'emmet-mode))
-  #+END_SRC
+#+END_SRC
   
 *** CSS
 #+BEGIN_SRC emacs-lisp
@@ -428,7 +424,6 @@ I'm used to using LSPs in vim so naturally I'll check it out here
   :config
   (setq css-indent-offset 2))
 #+END_SRC
-
 *** Java
  #+begin_src emacs-lisp
 (use-package lsp-java
@@ -437,9 +432,7 @@ I'm used to using LSPs in vim so naturally I'll check it out here
   (add-hook 'java-mode-hook 'lsp)
   (setq lsp-java--workspace-folders (list "~/Learning/interview/")))
  #+end_src
-
 *** Javascript
-
  #+begin_src emacs-lisp
 (use-package prettier-js
   :custom

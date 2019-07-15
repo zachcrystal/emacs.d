@@ -14,17 +14,3 @@
   (package-install 'use-package))
 
 (org-babel-load-file "~/.emacs.d/configuration.org")
-(custom-set-variables
- ;; custom-set-variables was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- '(package-selected-packages
-   (quote
-    (diff-hl which-key web-mode use-package undo-tree smartparens shell-pop rainbow-mode org-plus-contrib org-bullets magit lsp-ui lsp-java helm-swoop helm-projectile helm-lsp helm-descbinds flycheck expand-region emmet-mode elfeed-org doom-modeline dashboard crux company-lsp bug-hunter avy auto-compile atom-one-dark-theme aggressive-indent adaptive-wrap ace-jump-mode))))
-(custom-set-faces
- ;; custom-set-faces was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- )

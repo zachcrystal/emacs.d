@@ -1,8 +1,7 @@
-auto-save-list/
-elpa/
-init.el.bak
-projectile-bookmarks.eld
-projectile.cache
-recentf
-straight/
-transient/
+# Ignore Everything
+*
+
+# But not these files...
+!.gitignore
+!configuration.org
+!init.el
