@@ -1,6 +1,5 @@
 #+TITLE: Emacs Configuration
 #+AUTHOR: Zach Crystal
-
 * Configure =use-package=
 #+BEGIN_SRC emacs-lisp
 (require 'use-package-ensure)
@@ -17,7 +16,6 @@
 (setq user-full-name "Zach Crystal"
       user-full-address "zachcrystal@gmail.com")
 #+end_src
-
 ** Custom.el
 Put all the customize code in its own separate file, instead of it cluttering init.el
 #+begin_src emacs-lisp
@@ -33,6 +31,48 @@ Put all the customize code in its own separate file, instead of it cluttering in
   ;;   (gcmh-mode 1))
 #+end_src
 
+** Spelling
+
+#+begin_src emacs-lisp
+  ;; (use-package abbrev
+  ;;   :ensure nil
+  ;;   ;:hook ((org-mode text-mode) . abbrev-mode)
+  ;;   :custom
+  ;;   (abbrev-file-name (expand-file-name ".abbrev_defs" user-emacs-directory))
+  ;;   :config
+  ;;   (if (file-exists-p abbrev-file-name)
+  ;;       (quietly-read-abbrev-file)))
+#+end_src
+
+#+begin_src emacs-lisp
+  (use-package flyspell
+    :hook ((org-mode text-mode) . flyspell-mode)
+    :custom
+    ;(flyspell-abbrev-p t)
+    (flyspell-default-dictionary "en_US")
+    (flyspell-issue-message-flag nil)
+    (flyspell-issue-welcome-flag nil))
+
+  (use-package flyspell-correct-ivy
+    :after flyspell
+    :bind (:map flyspell-mode-map
+                ("C-c $" . flyspell-correct-word-generic))
+    :custom (flyspell-correct-interface 'flyspell-correct-ivy))
+
+  ;; (use-package flyspell
+  ;;   :defer t
+  ;;   :custom
+  ;;   (flyspell-delay 1))
+
+  ;; (use-package flyspell-correct-ivy
+  ;;   :ensure t
+  ;;   :demand t
+  ;;   :bind (:map flyspell-mode-map
+  ;;               ("C-c ;" . flyspell-correct-at-point)))
+
+  (eval-after-load "flyspell"
+    '(define-key flyspell-mode-map (kbd "C-;") nil))
+#+end_src
 * UI
 ** Font
 #+begin_src emacs-lisp
@@ -158,8 +198,21 @@ Adds things you copy and paste system-wide to the kill ring
     (:map company-active-map
           ("C-n" . company-select-next-or-abort)
           ("C-p" . company-select-previous-or-abort))
-    :hook
-    (after-init . global-company-mode))
+    :custom
+    (company-begin-commands '(self-insert-command))
+    (company-idle-delay .3)
+    (company-minimum-prefix-length 2)
+    (company-show-numbers t)
+    (company-tooltip-align-annotations 't)
+    (global-company-mode t))
+
+  ;; (use-package company-box
+  ;;   :after company
+  ;;   :hook(company-mode . company-box-mode))
+
+
+    ;; :hook
+    ;; (after-init . global-company-mode))
 
   ;; (use-package company-quickhelp
   ;;   :custom
@@ -249,6 +302,7 @@ Quicker selection of text. Doesn't always work as I would like. Sometimes it goe
   (use-package yasnippet-snippets)
 
   (use-package ivy-yasnippet)
+  (use-package react-snippets)
 #+end_src
 
 * Project Management
@@ -427,10 +481,13 @@ Quicker selection of text. Doesn't always work as I would like. Sometimes it goe
     (all-the-icons-ivy-setup))
 #+end_src
 
-** magit
+** Version Control
 #+BEGIN_SRC emacs-lisp
-(use-package magit
-  :bind ("C-x g" . magit-status))
+  (use-package magit
+    :bind ("C-x g" . magit-status))
+
+  (use-package forge
+    :after magit)
 #+END_SRC
 ** projectile
 #+begin_src emacs-lisp
@@ -474,7 +531,19 @@ Quicker selection of text. Doesn't always work as I would like. Sometimes it goe
 (use-package rainbow-mode
   :hook (prog-mode))
 #+END_SRC
-** Linter
+** iedit
+#+begin_src emacs-lisp
+  (use-package iedit
+    :custom
+    (iedit-toggle-key-default (kbd "C-;"))
+    :custom-face
+    (iedit-occurrence ((t (:foreground "#000" :background "#E5C07B")))))
+
+    ;(iedit-occurrence ((t (:foreground "#C678DD" :background "#21252B")))))
+
+
+#+end_src
+** Lint-er
 Flycheck provides 'on the fly' syntax checking for many languages. I've seen other keep flycheck disabled globally and instead enable it for specific language modes in their section of the config.
 Edit**: I'm going to turn it on for prog-mode
 Edit***: Turning off again lol
@@ -500,14 +569,19 @@ I'm used to using LSPs in vim so naturally I'll check it out here
   (use-package company-lsp :commands company-lsp)
 #+end_src
 
-** Languages
-*** HTML
+* Languages
+** CSS
+#+BEGIN_SRC emacs-lisp
+  (use-package css-mode
+    :custom
+    (css-indent-offset 2))
+#+END_SRC
+** HTML
 #+BEGIN_SRC emacs-lisp
   (use-package web-mode
     :bind (("C-c ]" . emmet-next-edit-point)
            ("C-c [" . emmet-prev-edit-point))
-    :mode ("\\.html?\\'"
-           "\\.css?\\'")
+    :mode ("\\.html?\\'")
     :custom-face
     (web-mode-current-element-highlight-face ((t (:foreground nil :background "#3E4551" :underline t))))
     :custom
@@ -530,13 +604,7 @@ I'm used to using LSPs in vim so naturally I'll check it out here
 
 #+END_SRC
   
-*** CSS
-#+BEGIN_SRC emacs-lisp
-  (use-package css-mode
-    :custom
-    (css-indent-offset 2))
-#+END_SRC
-*** Java
+** Java
  #+begin_src emacs-lisp
 (use-package lsp-java
   :after lsp
@@ -544,31 +612,66 @@ I'm used to using LSPs in vim so naturally I'll check it out here
   (add-hook 'java-mode-hook 'lsp)
   (setq lsp-java--workspace-folders (list "~/Learning/interview/")))
  #+end_src
-*** Javascript
+** Javascript
  #+begin_src emacs-lisp
-(use-package prettier-js
-  :custom
-  (prettier-js-args '("--print-width" "100"
-                      "--trailing-comma" "all")))
+   (use-package prettier-js
+     :custom
+     (prettier-js-args '("--print-width" "100"
+                         "--trailing-comma" "all")))
 
-(use-package js2-mode
-  :hook ((js2-mode . js2-imenu-extras-mode)
-         (js2-mode . prettier-js-mode))
-  :mode "\\.js'"
-  :custom
-  (js-indent-level 2))
+   (use-package js2-mode
+     :hook ((js2-mode . js2-imenu-extras-mode)
+            (js2-mode . prettier-js-mode))
+     :mode "\\.js'"
+     :custom
+     (js-indent-level 2))
 
-(use-package js2-refactor
-  :hook (js2-mode . js2-refactor-mode)
-  :config
-  (js2r-add-keybindings-with-prefix "C-c C-m"))
+   (use-package js2-refactor
+     :hook (js2-mode . js2-refactor-mode)
+     :config
+     (js2r-add-keybindings-with-prefix "C-c C-m"))
+
+   (use-package rjsx-mode)
  #+end_src
-*** JSON
+** JSON
 #+begin_src emacs-lisp
 (use-package json-mode
   :mode "\\.json\\'")
 #+end_src
-*** PHP
+** LaTeX
+#+begin_src emacs-lisp
+  (use-package tex
+    :ensure auctex
+    :bind (:map TeX-mode-map
+                ("C-c C-o" . TeX-recenter-output-buffer)
+                ("C-c C-l" . TeX-next-error)
+                ("M-[" . outline-previous-heading)
+                ("M-]" . outline-next-heading))
+    :hook (LaTeX-mode . reftex-mode)
+    :preface
+    (defun my/switch-to-help-window (&optional ARG REPARSE)
+      "Switches to the *TeX Help* buffer after compilation."
+      (other-window 1))
+    :custom
+    (TeX-auto-save t)
+    (TeX-byte-compile t)
+    (TeX-clean-confirm nil)
+    (TeX-master 'dwim)
+    (TeX-parse-self t)
+    (TeX-PDF-mode t)
+    (TeX-source-correlate-mode t)
+    (TeX-view-program-selection '((output-pdf "PDF Tools")))
+    :config
+    (advice-add 'TeX-next-error :after #'my/switch-to-help-window)
+    (advice-add 'TeX-recenter-output-buffer :after #'my/switch-to-help-window)
+    ;; the ":hook" doesn't work for this one... don't ask me why.
+    (add-hook 'TeX-after-compilation-finished-functions 'TeX-revert-document-buffer))
+
+  (use-package company-auctex
+    :after (auctex company)
+    :config (company-auctex-init))
+#+end_src
+** PHP
 #+begin_src emacs-lisp
   (use-package php-mode
     ;; :hook (flycheck-mode php-enable-psr2-coding-style))
@@ -587,7 +690,7 @@ I'm used to using LSPs in vim so naturally I'll check it out here
   (use-package phpactor)
   (use-package company-phpactor)
 #+end_src
-*** Typescript
+** Typescript
 #+begin_src emacs-lisp
 (use-package typescript-mode
   :custom
@@ -598,7 +701,7 @@ I'm used to using LSPs in vim so naturally I'll check it out here
   :config
   (flycheck-add-next-checker 'javascript-eslint 'javascript-tide 'append))
 #+end_src
-*** YAML
+** YAML
 #+begin_src emacs-lisp
   (use-package yaml-mode
     :defer t)
@@ -622,21 +725,16 @@ I'm used to using LSPs in vim so naturally I'll check it out here
     :ensure org-plus-contrib
     :bind
     (("C-c a" . org-agenda))
-    :custom-face
-    (org-verbatim ((t (:foreground "#D19A66"))))
     :config
-    ;(setq org-startup-indented t)
-    (setq org-src-fontify-natively t)
     (setq org-src-tab-acts-natively t)
     (setq org-src-window-setup 'current-window)
-   ; (setq org-src-preserve-indentation t)
+    (setq org-adapt-indentation nil)
     (setq org-hide-emphasis-markers t)
 
     (org-babel-do-load-languages
      'org-babel-load-languages
      '((java . t)
        (restclient . t))))
-  ;(require 'org-tempo)
 
   (add-to-list 'org-structure-template-alist
                '("el" . "src emacs-lisp"))
@@ -644,10 +742,17 @@ I'm used to using LSPs in vim so naturally I'll check it out here
   (add-to-list 'org-structure-template-alist
                 '("ej" . "src java :file-name \"/home/zach/Learning/interview/interview.java\" :classname"))
 
+  (add-to-list 'org-modules 'org-habit)
+
+  (setq org-todo-keywords
+        '((sequence "TODO(t)" "WAIT(w@/!)" "|" "DONE(d!)" "CANCELLED(c@)")))
+  (setq org-todo-keyword-faces
+             '(("WAIT" . "#E5C07B")
+               ("CANCELED" . (:foreground "#E06C75" :weight bold))))
+
   (use-package ox-hugo
     :after ox)
 #+END_SRC
-
 ** org-bullets
 Show some pretty bullets
 #+BEGIN_SRC emacs-lisp
@@ -671,12 +776,33 @@ The following function enables lsp when you open a src block within org-mode usi
 
 ** org-alert
 #+begin_src emacs-lisp
-(use-package org-alert
-  :config
-  (setq org-alert-interval 600)
-  (org-alert-enable))
+  ;; (use-package org-alert
+  ;;   :config
+  ;;   (setq org-alert-interval 600)
+  ;;   (org-alert-enable))
 #+end_src
 
+** pretty
+#+begin_src emacs-lisp
+  (custom-theme-set-faces
+   'user
+   '(variable-pitch ((t (:family "Source Sans Pro" :height 110 :weight normal))))
+   '(fixed-pitch ((t ( :family "IBMPlexMono" :slant normal :weight normal :height 0.8 :width normal)))))
+
+  (add-hook 'org-mode-hook 'variable-pitch-mode)
+
+  (custom-theme-set-faces
+   'user
+   '(org-block                 ((t (:background "#21272d" :inherit fixed-pitch))))
+   '(org-document-info-keyword ((t (:inherit (shadow fixed-pitch)))))
+   '(org-link                  ((t (:foreground "royal blue" :underline t))))
+   '(org-meta-line             ((t (:inherit (font-lock-comment-face fixed-pitch)))))
+   '(org-property-value        ((t (:inherit fixed-pitch))) t)
+   '(org-special-keyword       ((t (:inherit (font-lock-comment-face fixed-pitch)))))
+   '(org-tag                   ((t (:inherit (shadow fixed-pitch) :weight bold :height 1.0))))
+   '(org-verbatim              ((t (:inherit (shadow fixed-pitch))))))
+   ;'(org-indent                ((t (:inherit (org-hide fixed-pitch))))))
+#+end_src
 * RSS
 Using =elfeed=
 I used newsboat in my terminal before but elfeed already seems like an upgrade. Since emacs uses a GUI, it means that pictures show.
