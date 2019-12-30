@@ -1,5 +1,14 @@
 #+TITLE: Emacs Configuration
 #+AUTHOR: Zach Crystal
+* Startup
+** Lexical Binding
+#+begin_src emacs-lisp
+;;; init.el --- -*- lexical-binding: t -*-
+#+end_src
+** Defer Garbage Collection
+#+begin_src emacs-lisp
+(setq gc-cons-threshold 100000000)
+#+end_src
 * Configure =use-package=
 #+BEGIN_SRC emacs-lisp
 (require 'use-package-ensure)
@@ -9,6 +18,19 @@
   :config (auto-compile-on-load-mode))
 (setq load-prefer-newer t)
 #+END_SRC
+
+** Auto Package Update
+#+begin_src emacs-lisp
+  (use-package auto-package-update
+    :if (not (daemonp))
+    :custom
+    (auto-package-update-interval 7) ;; in days
+    (auto-package-update-prompt-before-update t)
+    (auto-package-update-delete-old-versions t)
+    (auto-package-update-hide-results t)
+    :config
+    (auto-package-update-maybe))
+#+end_src
 
 * Misc
 ** Personal Info
@@ -21,14 +43,6 @@ Put all the customize code in its own separate file, instead of it cluttering in
 #+begin_src emacs-lisp
 (setq custom-file (expand-file-name "custom.el" user-emacs-directory))
 (load custom-file 'noerror)
-#+end_src
-
-** Garbage Collector
-#+begin_src emacs-lisp
-  ;; (use-package gcmh
-  ;;   :disabled
-  ;;   :init
-  ;;   (gcmh-mode 1))
 #+end_src
 
 ** Spelling
@@ -97,10 +111,18 @@ I like doom-modeline. It's cool.
 ** Scrolling
 Is this even doing anything?
 #+begin_src emacs-lisp
-  ;; (setq scroll-margin 0
-  ;;       scroll-conservatively 10000
-  ;;       scroll-preserve-screen-position t
-  ;;       auto-window-vscroll nil)
+  (setq scroll-step 1)
+  (setq scroll-margin 1)
+  (setq scroll-conservatively 101)
+  (setq scroll-up-aggressively 0.01)
+  (setq scroll-down-aggressively 0.01)
+  (setq auto-window-vscroll nil)
+  (setq fast-but-imprecise-scrolling nil)
+  (setq mouse-wheel-scroll-amount '(1 ((shift) . 1)))
+  (setq mouse-wheel-progressive-speed nil)
+  ;; Horizontal Scroll
+  (setq hscroll-step 1)
+  (setq hscroll-margin 1)
 #+end_src
 
 ** Settings
@@ -203,24 +225,10 @@ Adds things you copy and paste system-wide to the kill ring
     (company-idle-delay .3)
     (company-minimum-prefix-length 2)
     (company-show-numbers t)
-    (company-tooltip-align-annotations 't)
-    (global-company-mode t))
+    (company-tooltip-align-annotations t)
+    (global-company-mode 1))
 
-  ;; (use-package company-box
-  ;;   :after company
-  ;;   :hook(company-mode . company-box-mode))
-
-
-    ;; :hook
-    ;; (after-init . global-company-mode))
-
-  ;; (use-package company-quickhelp
-  ;;   :custom
-  ;;   (company-quickhelp-delay 3)
-  ;;   :config
-  ;;   (company-quickhelp-mode 1))
 #+END_SRC
-
 ** Crux
 Keybindings that help move around
 #+BEGIN_SRC emacs-lisp
@@ -277,6 +285,35 @@ Quicker selection of text. Doesn't always work as I would like. Sometimes it goe
   ;; need to do this manually or not picked up by `shell-pop'
   (shell-pop--set-shell-type 'shell-pop-shell-type shell-pop-shell-type))
 #+END_SRC
+
+** recentf
+History 
+#+begin_src emacs-lisp
+  (use-package recentf
+    :ensure nil
+    :hook (after-init . recentf-mode)
+    :custom
+    (recentf-auto-cleanup "05:00am")
+    (recentf-max-saved-items 200)
+    (recentf-exclude '((expand-file-name package-user-dir)
+                       ".cache"
+                       ".cask"
+                       ".elfeed"
+                       "bookmarks"
+                       "cache"
+                       "ido.*"
+                       "persp-confs"
+                       "recentf"
+                       "undo-tree-hist"
+                       "url"
+                       "COMMIT_EDITMSG\\'")))
+
+  ;; When buffer is closed, saves the cursor location
+  (save-place-mode 1)
+
+  ;; Set history-length longer
+  (setq-default history-length 500)
+#+end_src
 
 ** undo-tree
 #+begin_src emacs-lisp
@@ -349,136 +386,135 @@ Quicker selection of text. Doesn't always work as I would like. Sometimes it goe
 
 ** Minibuffer
 #+begin_src emacs-lisp
-  (use-package smex)
+    (use-package smex)
 
-  (use-package flx) ; Fuzzy search
+    (use-package flx) ; Fuzzy search
 
-  (use-package ivy
-    :after ivy-rich
-    :bind
-    (:map mode-specific-map
-          ("C-r" . ivy-resume))
-    :custom
-    (ivy-count-format "(%d/%d) " "Show anzu-like counter")
-    (ivy-use-selectable-prompt t "Press C-p when you're on the first candidate to select input")
-    (ivy-initial-inputs-alist nil "Don't start filter with ^")
-                                          ;    (ivy-re-builders-alist '((t . ivy--regex-fuzzy)))
-    (ivy-use-virtual-buffers t)
-    :custom-face
-    (ivy-current-match ((t (:inherit 'hl-line))))
-    :config
-    (ivy-mode ))
+    (use-package ivy
+      :after ivy-rich
+      :bind
+      (:map mode-specific-map
+            ("C-r" . ivy-resume))
+      :custom
+      (ivy-count-format "(%d/%d) " "Show anzu-like counter")
+      (ivy-use-selectable-prompt t "Press C-p when you're on the first candidate to select input")
+      (ivy-initial-inputs-alist nil "Don't start filter with ^")
+                                            ;    (ivy-re-builders-alist '((t . ivy--regex-fuzzy)))
+      (ivy-use-virtual-buffers t)
+      :custom-face
+      (ivy-current-match ((t (:inherit 'hl-line))))
+      :config
+      (ivy-mode ))
 
-  (use-package counsel
-    :bind
-    (([remap isearch-forward] . counsel-grep-or-swiper)
-     ([remap-isearch-backward] . swiper-isearch)
-     :map mode-specific-map
-     :prefix-map counsel-prefix-map
-     :prefix "i"
-     ("a" . counsel-apropos)
-     ("f" . counsel-file-jump)
-     ("g". counsel-org-goto)
-     ("h" . counsel-command-history)
-     ("p" . counsel-package)
-     ("r" . counsel-recentf)
-     :map help-map
-     ("F" . counsel-describe-face))
-    :init
-    (counsel-mode))
+    (use-package counsel
+      :bind
+      (([remap isearch-forward] . counsel-grep-or-swiper)
+       ([remap-isearch-backward] . swiper-isearch)
+       :map mode-specific-map
+       :prefix-map counsel-prefix-map
+       :prefix "i"
+       ("a" . counsel-apropos)
+       ("f" . counsel-file-jump)
+       ("g". counsel-org-goto)
+       ("h" . counsel-command-history)
+       ("r" . counsel-recentf)
+       :map help-map
+       ("F" . counsel-describe-face))
+      :init
+      (counsel-mode))
 
-  (use-package swiper)
+    (use-package swiper)
 
-  (use-package ivy-rich
-    :defer 0.1
-    :preface
-    (defun ivy-rich-branch-candidate (candidate)
-      "Displays the branch candidate of the candidate for ivy-rich."
-      (let ((candidate (expand-file-name candidate ivy--directory)))
-        (if (or (not (file-exists-p candidate)) (file-remote-p candidate))
-            ""
-          (format "%s%s"
-                  (propertize
-                   (replace-regexp-in-string abbreviated-home-dir "~/"
-                                             (file-name-directory
-                                              (directory-file-name candidate)))
-                   'face 'font-lock-doc-face)
-                  (propertize
-                   (file-name-nondirectory
-                    (directory-file-name candidate))
-                   'face 'success)))))
+    (use-package ivy-rich
+      :defer 0.1
+      :preface
+      (defun ivy-rich-branch-candidate (candidate)
+        "Displays the branch candidate of the candidate for ivy-rich."
+        (let ((candidate (expand-file-name candidate ivy--directory)))
+          (if (or (not (file-exists-p candidate)) (file-remote-p candidate))
+              ""
+            (format "%s%s"
+                    (propertize
+                     (replace-regexp-in-string abbreviated-home-dir "~/"
+                                               (file-name-directory
+                                                (directory-file-name candidate)))
+                     'face 'font-lock-doc-face)
+                    (propertize
+                     (file-name-nondirectory
+                      (directory-file-name candidate))
+                     'face 'success)))))
 
-    (defun ivy-rich-file-group (candidate)
-      "Displays the file group of the candidate for ivy-rich"
-      (let ((candidate (expand-file-name candidate ivy--directory)))
-        (if (or (not (file-exists-p candidate)) (file-remote-p candidate))
-            ""
-          (let* ((group-id (file-attribute-group-id (file-attributes candidate)))
-                 (group-function (if (fboundp #'group-name) #'group-name #'identity))
-                 (group-name (funcall group-function group-id)))
-            (format "%s" group-name)))))
+      (defun ivy-rich-file-group (candidate)
+        "Displays the file group of the candidate for ivy-rich"
+        (let ((candidate (expand-file-name candidate ivy--directory)))
+          (if (or (not (file-exists-p candidate)) (file-remote-p candidate))
+              ""
+            (let* ((group-id (file-attribute-group-id (file-attributes candidate)))
+                   (group-function (if (fboundp #'group-name) #'group-name #'identity))
+                   (group-name (funcall group-function group-id)))
+              (format "%s" group-name)))))
 
-    (defun ivy-rich-file-modes (candidate)
-      "Displays the file mode of the candidate for ivy-rich."
-      (let ((candidate (expand-file-name candidate ivy--directory)))
-        (if (or (not (file-exists-p candidate)) (file-remote-p candidate))
-            ""
-          (format "%s" (file-attribute-modes (file-attributes candidate))))))
+      (defun ivy-rich-file-modes (candidate)
+        "Displays the file mode of the candidate for ivy-rich."
+        (let ((candidate (expand-file-name candidate ivy--directory)))
+          (if (or (not (file-exists-p candidate)) (file-remote-p candidate))
+              ""
+            (format "%s" (file-attribute-modes (file-attributes candidate))))))
 
-    (defun ivy-rich-file-size (candidate)
-      "Displays the file size of the candidate for ivy-rich."
-      (let ((candidate (expand-file-name candidate ivy--directory)))
-        (if (or (not (file-exists-p candidate)) (file-remote-p candidate))
-            ""
-          (let ((size (file-attribute-size (file-attributes candidate))))
-            (cond
-             ((> size 1000000) (format "%.1fM " (/ size 1000000.0)))
-             ((> size 1000) (format "%.1fk " (/ size 1000.0)))
-             (t (format "%d " size)))))))
+      (defun ivy-rich-file-size (candidate)
+        "Displays the file size of the candidate for ivy-rich."
+        (let ((candidate (expand-file-name candidate ivy--directory)))
+          (if (or (not (file-exists-p candidate)) (file-remote-p candidate))
+              ""
+            (let ((size (file-attribute-size (file-attributes candidate))))
+              (cond
+               ((> size 1000000) (format "%.1fM " (/ size 1000000.0)))
+               ((> size 1000) (format "%.1fk " (/ size 1000.0)))
+               (t (format "%d " size)))))))
 
-    (defun ivy-rich-switch-buffer-icon (candidate)
-      "Returns an icon for the candidate out of `all-the-icons'."
-      (with-current-buffer
-          (get-buffer candidate)
-        (let ((icon (all-the-icons-icon-for-mode major-mode :height 0.9)))
-          (if (symbolp icon)
-              (all-the-icons-icon-for-mode 'fundamental-mode :height 0.9)
-            icon))))
-    :config
-    (plist-put ivy-rich-display-transformers-list
-               'counsel-find-file
-               '(:columns
-                 (
-;(ivy-rich-switch-buffer-icon       (:width 2))
-                  (ivy-rich-candidate               (:width 73))
-  ;                (ivy-rich-file-group              (:width 4 :face font-lock-doc-face))
-                  (ivy-rich-file-modes              (:width 11 :face font-lock-doc-face))
-                  (ivy-rich-file-size               (:width 7 :face font-lock-doc-face))
-                  (ivy-rich-file-last-modified-time (:width 30 :face font-lock-doc-face)))))
-    (plist-put ivy-rich-display-transformers-list
-               'counsel-projectile-switch-project
-               '(:columns
-                 ((ivy-rich-branch-candidate        (:width 80)))))
-    (plist-put ivy-rich-display-transformers-list
-               'ivy-switch-buffer
-               '(:columns
-                 ((ivy-rich-switch-buffer-icon       (:width 2))
-                  (ivy-rich-candidate                (:width 40))
-                  (ivy-rich-switch-buffer-size       (:width 7))
-                  (ivy-rich-switch-buffer-indicators (:width 4 :face error :align right))
-                  (ivy-rich-switch-buffer-major-mode (:width 20 :face warning)))
-                 :predicate (lambda (cand) (get-buffer cand))))
-    (ivy-rich-mode 1))
+      (defun ivy-rich-switch-buffer-icon (candidate)
+        "Returns an icon for the candidate out of `all-the-icons'."
+        (with-current-buffer
+            (get-buffer candidate)
+          (let ((icon (all-the-icons-icon-for-mode major-mode :height 0.9)))
+            (if (symbolp icon)
+                (all-the-icons-icon-for-mode 'fundamental-mode :height 0.9)
+              icon))))
+      :config
+      (plist-put ivy-rich-display-transformers-list
+                 'counsel-find-file
+                 '(:columns
+                   (
+  ;(ivy-rich-switch-buffer-icon       (:width 2))
+                    (ivy-rich-candidate               (:width 73))
+    ;                (ivy-rich-file-group              (:width 4 :face font-lock-doc-face))
+                    (ivy-rich-file-modes              (:width 11 :face font-lock-doc-face))
+                    (ivy-rich-file-size               (:width 7 :face font-lock-doc-face))
+                    (ivy-rich-file-last-modified-time (:width 30 :face font-lock-doc-face)))))
+      (plist-put ivy-rich-display-transformers-list
+                 'counsel-projectile-switch-project
+                 '(:columns
+                   ((ivy-rich-branch-candidate        (:width 80)))))
+      (plist-put ivy-rich-display-transformers-list
+                 'ivy-switch-buffer
+                 '(:columns
+                   ((ivy-rich-switch-buffer-icon       (:width 2))
+                    (ivy-rich-candidate                (:width 40))
+                    (ivy-rich-switch-buffer-size       (:width 7))
+                    (ivy-rich-switch-buffer-indicators (:width 4 :face error :align right))
+                    (ivy-rich-switch-buffer-major-mode (:width 20 :face warning)))
+                   :predicate (lambda (cand) (get-buffer cand))))
+      (ivy-rich-mode 1))
 
-  (use-package all-the-icons-ivy
-    :after (all-the-icons ivy)
-    :custom (all-the-icons-ivy-buffer-commands '(ivy-switch-buffer-other-window))
-    ;;:custom
-    ;;(all-the-icons-ivy-buffer-commands '() "Don't use for buffers.")
-    :config
-    (add-to-list 'all-the-icons-ivy-file-commands 'counsel-dired-jump)
-    (add-to-list 'all-the-icons-ivy-file-commands 'counsel-find-library)
-    (all-the-icons-ivy-setup))
+    (use-package all-the-icons-ivy
+      :after (all-the-icons ivy)
+      :custom (all-the-icons-ivy-buffer-commands '(ivy-switch-buffer-other-window))
+      ;;:custom
+      ;;(all-the-icons-ivy-buffer-commands '() "Don't use for buffers.")
+      :config
+      (add-to-list 'all-the-icons-ivy-file-commands 'counsel-dired-jump)
+      (add-to-list 'all-the-icons-ivy-file-commands 'counsel-find-library)
+      (all-the-icons-ivy-setup))
 #+end_src
 
 ** Version Control
@@ -510,23 +546,42 @@ Quicker selection of text. Doesn't always work as I would like. Sometimes it goe
 #+end_src
 
 * Programming
-** Environment
-*** aggressive-indent
+** Dumb Jump
+#+begin_src emacs-lisp
+  (use-package dumb-jump
+    :bind
+    (:map prog-mode-map
+          (("C-c C-o" . dumb-jump-go-other-window)
+           ("C-c C-j" . dumb-jump-go)
+           ("C-c C-i" . dumb-jump-go-prompt)))
+    :custom (dumb-jump-selector 'ivy))
+#+end_src
+** Format All
+#+begin_src emacs-lisp
+  (use-package format-all
+    :bind ("C-c C-f" . format-all-buffer))
+#+end_src
+** aggressive-indent
 #+begin_src emacs-lisp
 ;(use-package aggressive-indent)
 #+end_src
 
-*** smartparens
+** smartparens
 #+begin_src emacs-lisp
   (use-package smartparens
     :hook (prog-mode . smartparens-mode)
+    :bind
+    (:map smartparens-mode-map
+          ("C-M-a" . sp-beginning-of-sexp) 
+          ("C-M-e" . sp-end-of-sexp) 
+          )
     :custom
     (sp-highlight-pair-overlay nil)
     :config
     (require 'smartparens-config))
 #+end_src
 
-*** rainbow-mode
+** rainbow-mode
 #+BEGIN_SRC emacs-lisp
 (use-package rainbow-mode
   :hook (prog-mode))
@@ -543,7 +598,7 @@ Quicker selection of text. Doesn't always work as I would like. Sometimes it goe
 
 
 #+end_src
-** Lint-er
+** Linter
 Flycheck provides 'on the fly' syntax checking for many languages. I've seen other keep flycheck disabled globally and instead enable it for specific language modes in their section of the config.
 Edit**: I'm going to turn it on for prog-mode
 Edit***: Turning off again lol
@@ -558,7 +613,9 @@ Edit***: Turning off again lol
 I'm used to using LSPs in vim so naturally I'll check it out here
 #+begin_src emacs-lisp
   (use-package lsp-mode
-    :hook((java-mode) . lsp)
+    :custom
+    (lsp-prefer-flymake nil)
+    :hook((java-mode js-mode js2-mode typescript-mode web-mode) . lsp)
     :commands lsp)
 
   (use-package lsp-ui 
@@ -596,7 +653,9 @@ I'm used to using LSPs in vim so naturally I'll check it out here
   (use-package emmet-mode
     :init
     (setq emmet-move-cursor-between-quotes t)
-    :hook web-mode)
+    :hook (web-mode js-mode)
+    :config
+    (setq emmet-expand-jsx-className? t))
 
   (use-package company-web
     :config
@@ -615,23 +674,34 @@ I'm used to using LSPs in vim so naturally I'll check it out here
 ** Javascript
  #+begin_src emacs-lisp
    (use-package prettier-js
+     :hook (js-mode . prettier-js-mode)
      :custom
      (prettier-js-args '("--print-width" "100"
-                         "--trailing-comma" "all")))
+                         "--trailing-comma" "none"
+                         "--jsx-single-quote" "true"
+                         "--jsx-bracket-same-line" "true"
+                         "--single-quote" "true"
+                         "--bracket-spacing" "true"
+                         "--no-semi" "true")))
 
    (use-package js2-mode
-     :hook ((js2-mode . js2-imenu-extras-mode)
-            (js2-mode . prettier-js-mode))
+     :hook
+     ((js-mode . js2-minor-mode)
+      (js2-mode . prettify-symbols-mode)
+      (js2-mode . js2-imenu-extras-mode))
+     :interpreter
+     (("node" . js2-mode)
+      ("node" . js2-jsx-mode))
      :mode "\\.js'"
      :custom
      (js-indent-level 2))
 
    (use-package js2-refactor
-     :hook (js2-mode . js2-refactor-mode)
+     :hook (js-mode . js2-refactor-mode)
      :config
-     (js2r-add-keybindings-with-prefix "C-c C-m"))
+     (js2r-add-keybindings-with-prefix "C-c C-r"))
 
-   (use-package rjsx-mode)
+
  #+end_src
 ** JSON
 #+begin_src emacs-lisp
