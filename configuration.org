@@ -84,14 +84,22 @@ Put all the customize code in its own separate file, instead of it cluttering in
   ;;   :bind (:map flyspell-mode-map
   ;;               ("C-c ;" . flyspell-correct-at-point)))
 
-  (eval-after-load "flyspell"
-    '(define-key flyspell-mode-map (kbd "C-;") nil))
+  ;; (eval-after-load "flyspell"
+  ;;   '(define-key flyspell-mode-map (kbd "C-;") nil))
+#+end_src
+** exec-path-from-shell
+#+begin_src emacs-lisp
+  (use-package exec-path-from-shell
+    :config
+    (exec-path-from-shell-initialize))
 #+end_src
 * UI
 ** Font
 #+begin_src emacs-lisp
   ;;(set-frame-font "Iosevka 10" nil t)
-  (set-frame-font "IBMPlexMono 9" nil t)
+  ;;(set-frame-font "IBMPlexMono 9" nil t)
+  (setq default-frame-alist '((font . "IBMPlexMono 9")))
+
 #+end_src
 
 ** Modeline
@@ -345,17 +353,17 @@ History
 * Project Management
 ** avy
 #+BEGIN_SRC emacs-lisp  
-(use-package avy
-  :bind (("C-:" . avy-goto-char)
-         ("C-'" . avy-goto-char-2)
-         ("M-g f" . avy-goto-line)
-         ("M-g w" . avy-goto-word-1))
-  :config
-  (setq avy-background t))
+  (use-package avy
+    :config
+    (avy-setup-default)
+    :bind (("C-:" . avy-goto-char)
+           ("C-'" . avy-goto-char-2)
+           ("M-g f" . avy-goto-line)
+           ("M-g w" . avy-goto-word-1)))
 
-(use-package avy-zap
-  :bind
-  ([remap zap-to-char] . avy-zap-to-char))
+  (use-package avy-zap
+    :bind
+    ([remap zap-to-char] . avy-zap-to-char))
 #+END_SRC
 
 ** ace-window
@@ -384,9 +392,24 @@ History
   (add-hook 'magit-post-refresh-hook 'diff-hl-magit-post-refresh))
 #+end_src
 
+** Dired
+#+begin_src emacs-lisp
+  (use-package dired
+    :ensure nil
+    :custom
+    (dired-auto-revert-buffer t)
+    (global-auto-revert-non-file-buffers t)
+    (dired-dwim-target t)
+    (load-prefer-newer t)
+    (dired-recursive-copies 'always)
+    (dired-recursive-deletes 'always))
+
+  (use-package all-the-icons-dired
+    :hook(dired-mode . all-the-icons-dired-mode))
+#+end_src
 ** Minibuffer
 #+begin_src emacs-lisp
-    (use-package smex)
+    (use-package amx)
 
     (use-package flx) ; Fuzzy search
 
@@ -404,7 +427,7 @@ History
       :custom-face
       (ivy-current-match ((t (:inherit 'hl-line))))
       :config
-      (ivy-mode ))
+      (ivy-mode t))
 
     (use-package counsel
       :bind
@@ -418,6 +441,7 @@ History
        ("g". counsel-org-goto)
        ("h" . counsel-command-history)
        ("r" . counsel-recentf)
+       ("s r" . counsel-rg)
        :map help-map
        ("F" . counsel-describe-face))
       :init
@@ -527,22 +551,24 @@ History
 #+END_SRC
 ** projectile
 #+begin_src emacs-lisp
-(use-package projectile
-  :bind
-  (:map mode-specific-map ("p" . projectile-command-map))
-  :custom
-  (projectile-project-root-files-functions
-   '(projectile-root-local
-     projectile-root-top-down
-     projectile-root-bottom-up
-     projectile-root-top-down-recurring))
-  (projectile-completion-system 'ivy)
-  (projectile-mode +1))
+  (use-package projectile
+    :bind
+    (:map mode-specific-map ("p" . projectile-command-map))
+    :custom
+    (projectile-project-root-files-functions
+     '(projectile-root-local
+       projectile-root-top-down
+       projectile-root-bottom-up
+       projectile-root-top-down-recurring))
+    (projectile-completion-system 'ivy)
+    (projectile-mode +1))
 
-(use-package counsel-projectile
-  :after counsel projectile
-  :config
-  (counsel-projectile-mode))
+  (add-to-list 'projectile-globally-ignored-directories "*node_modules")
+
+  (use-package counsel-projectile
+    :after counsel projectile
+    :config
+    (counsel-projectile-mode))
 #+end_src
 
 * Programming
@@ -561,31 +587,11 @@ History
   (use-package format-all
     :bind ("C-c C-f" . format-all-buffer))
 #+end_src
-** aggressive-indent
+** goto-chg
 #+begin_src emacs-lisp
-;(use-package aggressive-indent)
+  (use-package goto-chg
+    :bind ("C-," . goto-last-change))
 #+end_src
-
-** smartparens
-#+begin_src emacs-lisp
-  (use-package smartparens
-    :hook (prog-mode . smartparens-mode)
-    :bind
-    (:map smartparens-mode-map
-          ("C-M-a" . sp-beginning-of-sexp) 
-          ("C-M-e" . sp-end-of-sexp) 
-          )
-    :custom
-    (sp-highlight-pair-overlay nil)
-    :config
-    (require 'smartparens-config))
-#+end_src
-
-** rainbow-mode
-#+BEGIN_SRC emacs-lisp
-(use-package rainbow-mode
-  :hook (prog-mode))
-#+END_SRC
 ** iedit
 #+begin_src emacs-lisp
   (use-package iedit
@@ -593,15 +599,9 @@ History
     (iedit-toggle-key-default (kbd "C-;"))
     :custom-face
     (iedit-occurrence ((t (:foreground "#000" :background "#E5C07B")))))
-
-    ;(iedit-occurrence ((t (:foreground "#C678DD" :background "#21252B")))))
-
-
 #+end_src
 ** Linter
 Flycheck provides 'on the fly' syntax checking for many languages. I've seen other keep flycheck disabled globally and instead enable it for specific language modes in their section of the config.
-Edit**: I'm going to turn it on for prog-mode
-Edit***: Turning off again lol
 #+begin_src emacs-lisp
   (use-package flycheck
     :config (flycheck-mode 1)
@@ -610,20 +610,58 @@ Edit***: Turning off again lol
 #+end_src
 
 ** LSP
-I'm used to using LSPs in vim so naturally I'll check it out here
 #+begin_src emacs-lisp
-  (use-package lsp-mode
-    :custom
-    (lsp-prefer-flymake nil)
-    :hook((java-mode js-mode js2-mode typescript-mode web-mode) . lsp)
-    :commands lsp)
+    (use-package lsp-mode
+      :custom
+      (lsp-prefer-flymake nil)
+      :hook((java-mode js-mode js2-mode typescript-mode web-mode python-mode) . lsp)
+      :commands lsp)
 
-  (use-package lsp-ui 
-    :commands lsp-ui-mode
-    :config
-    (setq lsp-ui-sideline-show-code-actions nil)
-    (setq lsp-ui-doc-enable nil))
-  (use-package company-lsp :commands company-lsp)
+    (use-package lsp-ui 
+      :commands lsp-ui-mode
+      :custom
+      (lsp-sideline-enable nil)
+      (lsp-ui-include-signature t))
+
+      ;(setq lsp-ui-sideline-show-code-actions nil)
+      ;(setq lsp-ui-doc-enable nil))
+    (use-package company-lsp :commands company-lsp)
+
+    (use-package dap-mode
+      :after lsp-mode
+      :config
+      (dap-mode t)
+      (dap-ui-mode t))
+
+    (require 'dap-python)
+#+end_src
+
+** multiple-cursors
+#+begin_src emacs-lisp
+  (use-package multiple-cursors
+    :bind (("C-S-c C-S-c" . mc/edit-lines)
+           ("C->" . mc/mark-next-like-this)
+           ("C-<" . mc/mark-previous-like-this)
+           ("C-c C-<" . mc/mark-all-like-this)))
+#+end_src
+** rainbow-mode
+#+BEGIN_SRC emacs-lisp
+(use-package rainbow-mode
+  :hook (prog-mode))
+#+END_SRC
+** smartparens
+#+begin_src emacs-lisp
+  ;; (use-package smartparens
+  ;;   :hook (prog-mode . smartparens-mode)
+  ;;   :bind
+  ;;   (:map smartparens-mode-map
+  ;;         ("C-M-a" . sp-beginning-of-sexp) 
+  ;;         ("C-M-e" . sp-end-of-sexp) 
+  ;;         )
+  ;;   :custom
+  ;;   (sp-highlight-pair-overlay nil)
+  ;;   :config
+  ;;   (require 'smartparens-config))
 #+end_src
 
 * Languages
@@ -638,7 +676,7 @@ I'm used to using LSPs in vim so naturally I'll check it out here
   (use-package web-mode
     :bind (("C-c ]" . emmet-next-edit-point)
            ("C-c [" . emmet-prev-edit-point))
-    :mode ("\\.html?\\'")
+    :mode ("\\.html?\\'" "\\.vue?\\'")
     :custom-face
     (web-mode-current-element-highlight-face ((t (:foreground nil :background "#3E4551" :underline t))))
     :custom
@@ -660,29 +698,29 @@ I'm used to using LSPs in vim so naturally I'll check it out here
   (use-package company-web
     :config
     (add-to-list 'company-backends 'company-web-html))
-
 #+END_SRC
   
 ** Java
  #+begin_src emacs-lisp
-(use-package lsp-java
-  :after lsp
-  :config
-  (add-hook 'java-mode-hook 'lsp)
-  (setq lsp-java--workspace-folders (list "~/Learning/interview/")))
+   (use-package lsp-java
+     :after lsp
+     :config
+     (add-hook 'java-mode-hook 'lsp)
+     :custom
+     (lsp-java-server-install-dir (expand-file-name "~/.emacs.d/eclipse.jdt.ls/server/"))
+     (lsp-java--workspace-folders (expand-file-name "~/Learning/interview/")))
  #+end_src
-** Javascript
+** JavaScript
  #+begin_src emacs-lisp
    (use-package prettier-js
      :hook (js-mode . prettier-js-mode)
      :custom
      (prettier-js-args '("--print-width" "100"
                          "--trailing-comma" "none"
-                         "--jsx-single-quote" "true"
-                         "--jsx-bracket-same-line" "true"
-                         "--single-quote" "true"
-                         "--bracket-spacing" "true"
-                         "--no-semi" "true")))
+                          "--jsx-single-quote" "true"
+                          "--jsx-bracket-same-line" "true"
+                          "--single-quote" "true"
+                          "--bracket-spacing" "true")))
 
    (use-package js2-mode
      :hook
@@ -692,54 +730,44 @@ I'm used to using LSPs in vim so naturally I'll check it out here
      :interpreter
      (("node" . js2-mode)
       ("node" . js2-jsx-mode))
-     :mode "\\.js'"
-     :custom
-     (js-indent-level 2))
+     :mode "\\.js\\'"
+     :custom (js-indent-level 2))
 
    (use-package js2-refactor
      :hook (js-mode . js2-refactor-mode)
      :config
      (js2r-add-keybindings-with-prefix "C-c C-r"))
-
-
  #+end_src
 ** JSON
 #+begin_src emacs-lisp
-(use-package json-mode
-  :mode "\\.json\\'")
+  (use-package json-mode
+    :mode "\\.json\\'")
+
+  (add-hook 'json-mode-hook (lambda()
+                              (js2-minor-mode -1)))
 #+end_src
 ** LaTeX
 #+begin_src emacs-lisp
-  (use-package tex
-    :ensure auctex
-    :bind (:map TeX-mode-map
-                ("C-c C-o" . TeX-recenter-output-buffer)
-                ("C-c C-l" . TeX-next-error)
-                ("M-[" . outline-previous-heading)
-                ("M-]" . outline-next-heading))
-    :hook (LaTeX-mode . reftex-mode)
-    :preface
-    (defun my/switch-to-help-window (&optional ARG REPARSE)
-      "Switches to the *TeX Help* buffer after compilation."
-      (other-window 1))
-    :custom
-    (TeX-auto-save t)
-    (TeX-byte-compile t)
-    (TeX-clean-confirm nil)
-    (TeX-master 'dwim)
-    (TeX-parse-self t)
-    (TeX-PDF-mode t)
-    (TeX-source-correlate-mode t)
-    (TeX-view-program-selection '((output-pdf "PDF Tools")))
-    :config
-    (advice-add 'TeX-next-error :after #'my/switch-to-help-window)
-    (advice-add 'TeX-recenter-output-buffer :after #'my/switch-to-help-window)
-    ;; the ":hook" doesn't work for this one... don't ask me why.
-    (add-hook 'TeX-after-compilation-finished-functions 'TeX-revert-document-buffer))
+    (use-package tex
+      :ensure auctex
+      :bind (:map TeX-mode-map
+                  ("C-c C-o" . TeX-recenter-output-buffer)
+                  ("C-c C-l" . TeX-next-error)
+                  ("M-[" . outline-previous-heading)
+                  ("M-]" . outline-next-heading))
+      :custom
+      (TeX-auto-save t)
+      (TeX-byte-compile t)
+      (TeX-clean-confirm nil)
+      (TeX-master nil)
+      (TeX-parse-self t)
+      (TeX-PDF-mode t)
+      (TeX-source-correlate-mode t)
+      (TeX-view-program-selection '((output-pdf "PDF Tools"))))
 
-  (use-package company-auctex
-    :after (auctex company)
-    :config (company-auctex-init))
+    (use-package company-auctex
+      :after (auctex company)
+      :config (company-auctex-init))
 #+end_src
 ** PHP
 #+begin_src emacs-lisp
@@ -760,6 +788,28 @@ I'm used to using LSPs in vim so naturally I'll check it out here
   (use-package phpactor)
   (use-package company-phpactor)
 #+end_src
+** Python
+#+begin_src emacs-lisp
+  (use-package python-mode
+    :mode "\\.py\\'"
+    :custom
+    (flycheck-python-pycompile-excecutable "python3")
+    (python-shell-interpreter "python3"))
+#+end_src
+
+#+begin_src emacs-lisp
+  (use-package virtualenvwrapper)
+#+end_src
+
+*** LSP Python MS
+#+begin_src emacs-lisp
+   (use-package lsp-python-ms
+     :after lsp-mode python
+     :hook (python-mode . (lambda ()
+     (require 'lsp-python-ms)
+     (lsp))))
+#+end_src
+
 ** Typescript
 #+begin_src emacs-lisp
 (use-package typescript-mode
@@ -804,7 +854,8 @@ I'm used to using LSPs in vim so naturally I'll check it out here
     (org-babel-do-load-languages
      'org-babel-load-languages
      '((java . t)
-       (restclient . t))))
+       (restclient . t)
+       (js . t))))
 
   (add-to-list 'org-structure-template-alist
                '("el" . "src emacs-lisp"))
@@ -822,6 +873,8 @@ I'm used to using LSPs in vim so naturally I'll check it out here
 
   (use-package ox-hugo
     :after ox)
+
+  (require 'ob-js)
 #+END_SRC
 ** org-bullets
 Show some pretty bullets
@@ -844,14 +897,6 @@ The following function enables lsp when you open a src block within org-mode usi
   (lsp-ui-flycheck-enable t))
 #+end_src
 
-** org-alert
-#+begin_src emacs-lisp
-  ;; (use-package org-alert
-  ;;   :config
-  ;;   (setq org-alert-interval 600)
-  ;;   (org-alert-enable))
-#+end_src
-
 ** pretty
 #+begin_src emacs-lisp
   (custom-theme-set-faces
@@ -870,8 +915,10 @@ The following function enables lsp when you open a src block within org-mode usi
    '(org-property-value        ((t (:inherit fixed-pitch))) t)
    '(org-special-keyword       ((t (:inherit (font-lock-comment-face fixed-pitch)))))
    '(org-tag                   ((t (:inherit (shadow fixed-pitch) :weight bold :height 1.0))))
-   '(org-verbatim              ((t (:inherit (shadow fixed-pitch))))))
-   ;'(org-indent                ((t (:inherit (org-hide fixed-pitch))))))
+   '(org-table              ((t (:inherit (shadow fixed-pitch)))))
+   '(org-verbatim              ((t (:inherit (shadow fixed-pitch)))))
+  )
+                                          ;'(org-indent                ((t (:inherit (org-hide fixed-pitch))))))
 #+end_src
 * RSS
 Using =elfeed=
