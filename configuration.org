@@ -137,6 +137,11 @@ I like doom-modeline. It's cool.
   :hook (after-init . doom-modeline-mode))
 #+END_SRC
 
+** eyebrowse
+#+begin_src emacs-lisp
+  (use-package eyebrowse
+    :config (eyebrowse-mode t))
+#+end_src
 ** paradox
 #+begin_src emacs-lisp
 (use-package paradox
@@ -192,8 +197,6 @@ Gotta have aod everywhere
 ** Icons
 #+begin_src emacs-lisp
   (use-package all-the-icons)
-
-  
 #+end_src
 
 * Editor Settings
