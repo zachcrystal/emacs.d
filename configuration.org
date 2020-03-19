@@ -93,6 +93,20 @@ Put all the customize code in its own separate file, instead of it cluttering in
     :config
     (exec-path-from-shell-initialize))
 #+end_src
+** Operating System
+#+begin_src emacs-lisp
+  ;; Check if system is Darwin/macOS
+  (defun is-darwin ()
+    "Return true if system is darwin-based (Mac OS X)"
+    (string-equal system-type "darwin")
+    )
+
+  ;; Check if system is GNU/Linux
+  (defun is-linux ()
+    "Return true if system is GNU/Linux-based"
+    (string-equal system-type "gnu/linux")
+    )
+#+end_src
 * UI
 ** Font
 #+begin_src emacs-lisp
@@ -692,8 +706,9 @@ Flycheck provides 'on the fly' syntax checking for many languages. I've seen oth
     :init
     (setq emmet-move-cursor-between-quotes t)
     :hook (web-mode js-mode)
-    :config
-    (setq emmet-expand-jsx-className? t))
+    ;; :config
+    ;; (setq emmet-expand-jsx-className? t)
+    )
 
   (use-package company-web
     :config
@@ -725,7 +740,6 @@ Flycheck provides 'on the fly' syntax checking for many languages. I've seen oth
    (use-package js2-mode
      :hook
      ((js-mode . js2-minor-mode)
-      (js2-mode . prettify-symbols-mode)
       (js2-mode . js2-imenu-extras-mode))
      :interpreter
      (("node" . js2-mode)
@@ -771,22 +785,7 @@ Flycheck provides 'on the fly' syntax checking for many languages. I've seen oth
 #+end_src
 ** PHP
 #+begin_src emacs-lisp
-  (use-package php-mode
-    ;; :hook (flycheck-mode php-enable-psr2-coding-style))
-    :hook ((php-mode . (lambda () (set (make-local-variable 'company-backends)
-                                       '(;; list of backends
-                                         company-phpactor
-                                         company-files
-                                         ))))))
-
-  (add-hook 'php-mode-hook
-            (lambda ()
-              (make-local-variable 'eldoc-documentation-function)
-              (setq eldoc-documentation-function
-                    'phpactor-hover)))
-
-  (use-package phpactor)
-  (use-package company-phpactor)
+  (use-package php-mode)
 #+end_src
 ** Python
 #+begin_src emacs-lisp
@@ -812,14 +811,14 @@ Flycheck provides 'on the fly' syntax checking for many languages. I've seen oth
 
 ** Typescript
 #+begin_src emacs-lisp
-(use-package typescript-mode
-  :custom
-  (typescript-indent-level 2))
+  (use-package typescript-mode
+    :custom
+    (typescript-indent-level 2))
 
-(use-package tide
-  :hook ((typescript-mode js2-mode) . tide-setup)
-  :config
-  (flycheck-add-next-checker 'javascript-eslint 'javascript-tide 'append))
+  ;; (use-package tide
+  ;;   :hook ((typescript-mode js2-mode) . tide-setup)
+  ;;   :config
+  ;;   (flycheck-add-next-checker 'javascript-eslint 'javascript-tide 'append))
 #+end_src
 ** YAML
 #+begin_src emacs-lisp
@@ -899,10 +898,12 @@ The following function enables lsp when you open a src block within org-mode usi
 
 ** pretty
 #+begin_src emacs-lisp
+  (when (is-linux)
   (custom-theme-set-faces
    'user
    '(variable-pitch ((t (:family "Source Sans Pro" :height 110 :weight normal))))
    '(fixed-pitch ((t ( :family "IBMPlexMono" :slant normal :weight normal :height 0.8 :width normal)))))
+    )
 
   (add-hook 'org-mode-hook 'variable-pitch-mode)
 
