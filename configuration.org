@@ -107,12 +107,26 @@ Put all the customize code in its own separate file, instead of it cluttering in
     (string-equal system-type "gnu/linux")
     )
 #+end_src
+** mac command key to meta
+#+begin_src emacs-lisp
+  (when (is-darwin)
+    (setq mac-option-key-is-meta nil
+        mac-command-key-is-meta t
+        mac-command-modifier 'meta
+        mac-option-modifer 'none)
+    )
+#+end_src
+
 * UI
 ** Font
 #+begin_src emacs-lisp
-  ;;(set-frame-font "Iosevka 10" nil t)
-  ;;(set-frame-font "IBMPlexMono 9" nil t)
-  (setq default-frame-alist '((font . "IBMPlexMono 9")))
+  (when (is-linux)
+    (setq default-frame-alist '((font . "IBMPlexMono 9")))
+    )
+
+  (when (is-darwin)
+    (setq default-frame-alist '((font . "IBM Plex Mono 12")))
+    )
 
 #+end_src
 
@@ -150,13 +164,18 @@ Is this even doing anything?
 ** Settings
 Turn off all GUI menu stuff and other general stuff
 #+BEGIN_SRC emacs-lisp
-(tool-bar-mode -1)
-(scroll-bar-mode -1)
-(menu-bar-mode -1)
+  (tool-bar-mode -1)
+  (scroll-bar-mode -1)
+  (menu-bar-mode -1)
 
-(global-hl-line-mode 1)
+  (when (is-darwin)
+    (add-to-list 'default-frame-alist '(ns-transparent-titlebar . t))
+    (add-to-list 'default-frame-alist '(ns-appearance . dark))
+    )
 
-(defalias 'yes-or-no-p 'y-or-n-p)
+  (global-hl-line-mode 1)
+
+  (defalias 'yes-or-no-p 'y-or-n-p)
 #+END_SRC
 
 ** Theme
@@ -903,6 +922,13 @@ The following function enables lsp when you open a src block within org-mode usi
    'user
    '(variable-pitch ((t (:family "Source Sans Pro" :height 110 :weight normal))))
    '(fixed-pitch ((t ( :family "IBMPlexMono" :slant normal :weight normal :height 0.8 :width normal)))))
+  )
+
+  (when (is-darwin)
+  (custom-theme-set-faces
+   'user
+   '(variable-pitch ((t (:family "Source Sans Pro" :height 140 :weight normal))))
+   '(fixed-pitch ((t ( :family "IBM Plex Mono" :slant normal :weight normal :height 0.8 :width normal)))))
     )
 
   (add-hook 'org-mode-hook 'variable-pitch-mode)
