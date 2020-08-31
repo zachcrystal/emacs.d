@@ -46,18 +46,6 @@ Put all the customize code in its own separate file, instead of it cluttering in
 #+end_src
 
 ** Spelling
-
-#+begin_src emacs-lisp
-  ;; (use-package abbrev
-  ;;   :ensure nil
-  ;;   ;:hook ((org-mode text-mode) . abbrev-mode)
-  ;;   :custom
-  ;;   (abbrev-file-name (expand-file-name ".abbrev_defs" user-emacs-directory))
-  ;;   :config
-  ;;   (if (file-exists-p abbrev-file-name)
-  ;;       (quietly-read-abbrev-file)))
-#+end_src
-
 #+begin_src emacs-lisp
   (use-package flyspell
     :hook ((org-mode text-mode) . flyspell-mode)
@@ -72,20 +60,6 @@ Put all the customize code in its own separate file, instead of it cluttering in
     :bind (:map flyspell-mode-map
                 ("C-c $" . flyspell-correct-word-generic))
     :custom (flyspell-correct-interface 'flyspell-correct-ivy))
-
-  ;; (use-package flyspell
-  ;;   :defer t
-  ;;   :custom
-  ;;   (flyspell-delay 1))
-
-  ;; (use-package flyspell-correct-ivy
-  ;;   :ensure t
-  ;;   :demand t
-  ;;   :bind (:map flyspell-mode-map
-  ;;               ("C-c ;" . flyspell-correct-at-point)))
-
-  ;; (eval-after-load "flyspell"
-  ;;   '(define-key flyspell-mode-map (kbd "C-;") nil))
 #+end_src
 ** exec-path-from-shell
 #+begin_src emacs-lisp
@@ -117,6 +91,11 @@ Put all the customize code in its own separate file, instead of it cluttering in
     )
 #+end_src
 
+** Keybindings
+#+begin_src emacs-lisp
+  ;; (global-set-key "\C-x\C-m" 'execute-extended-command)
+  ;; (global-set-key "\C-c\C-m" 'execute-extended-command)
+#+end_src
 * UI
 ** Font
 #+begin_src emacs-lisp
@@ -127,7 +106,6 @@ Put all the customize code in its own separate file, instead of it cluttering in
   (when (is-darwin)
     (setq default-frame-alist '((font . "IBM Plex Mono 12")))
     )
-
 #+end_src
 
 ** Modeline
@@ -242,7 +220,6 @@ Wrap lines but also keeps them indented
   (add-hook 'visual-line-mode-hook #'adaptive-wrap-prefix-mode)
   (global-visual-line-mode +1))
 #+END_SRC
-
 ** alert
 #+begin_src emacs-lisp
 (use-package alert
@@ -265,6 +242,7 @@ Adds things you copy and paste system-wide to the kill ring
           ("C-n" . company-select-next-or-abort)
           ("C-p" . company-select-previous-or-abort))
     :custom
+    (company-backends '(company-capf))
     (company-begin-commands '(self-insert-command))
     (company-idle-delay .3)
     (company-minimum-prefix-length 2)
@@ -577,13 +555,16 @@ History
       (all-the-icons-ivy-setup))
 #+end_src
 
+** npm-mode
+#+begin_src emacs-lisp
+  (use-package npm-mode
+    :config
+    (npm-global-mode))
+#+end_src
 ** Version Control
 #+BEGIN_SRC emacs-lisp
   (use-package magit
     :bind ("C-x g" . magit-status))
-
-  (use-package forge
-    :after magit)
 #+END_SRC
 ** projectile
 #+begin_src emacs-lisp
@@ -599,7 +580,7 @@ History
     (projectile-completion-system 'ivy)
     (projectile-mode +1))
 
-  (add-to-list 'projectile-globally-ignored-directories "*node_modules")
+  ;(add-to-list 'projectile-globally-ignored-directories "*node_modules")
 
   (use-package counsel-projectile
     :after counsel projectile
@@ -607,6 +588,19 @@ History
     (counsel-projectile-mode))
 #+end_src
 
+** Prescient
+#+begin_src emacs-lisp
+  (use-package prescient
+    :config (prescient-persis-mode))
+
+  (use-package company-prescient
+    :after company
+    :config (company-prescient-mode))
+
+  (use-package ivy-prescient
+    :after ivy
+    :config (ivy-prescient-mode))
+#+end_src
 * Programming
 ** Dumb Jump
 #+begin_src emacs-lisp
@@ -640,36 +634,96 @@ History
 Flycheck provides 'on the fly' syntax checking for many languages. I've seen other keep flycheck disabled globally and instead enable it for specific language modes in their section of the config.
 #+begin_src emacs-lisp
   (use-package flycheck
-    :config (flycheck-mode 1)
-    :custom
-    (flycheck-phpcs-standard "PSR2"))
+    :config (flycheck-mode 1))
 #+end_src
 
 ** LSP
 #+begin_src emacs-lisp
-    (use-package lsp-mode
-      :custom
-      (lsp-prefer-flymake nil)
-      :hook((java-mode js-mode js2-mode typescript-mode web-mode python-mode) . lsp)
-      :commands lsp)
+  (setq lsp-keymap-prefix "C-c l")
 
-    (use-package lsp-ui 
-      :commands lsp-ui-mode
-      :custom
-      (lsp-sideline-enable nil)
-      (lsp-ui-include-signature t))
+  (use-package lsp-mode
+    :custom
+    (lsp-prefer-flymake nil)
+    :hook(
+          ((java-mode js-mode js2-mode typescript-mode web-mode) . lsp)
+    (lsp-mode . lsp-enable-which-key-integration))
+    :commands lsp)
 
-      ;(setq lsp-ui-sideline-show-code-actions nil)
-      ;(setq lsp-ui-doc-enable nil))
-    (use-package company-lsp :commands company-lsp)
+  (require 'lsp-vetur)
 
-    (use-package dap-mode
-      :after lsp-mode
-      :config
-      (dap-mode t)
-      (dap-ui-mode t))
+  (setq lsp-eslint-server-command 
+     '("node" 
+       "/home/zach/.vscode/extensions/vscode-eslint/server/out/eslintServer.js" 
+       "--stdio"))  
 
-    (require 'dap-python)
+
+  ;; (use-package lsp-ui 
+  ;;   :commands lsp-ui-mode
+  ;;   :custom
+  ;;   (lsp-sideline-enable nil)
+  ;;   (lsp-ui-include-signature t))
+
+  (use-package lsp-ui
+    :ensure t
+    :after (lsp-mode)
+    :commands lsp-ui-doc-hide
+    :bind (:map lsp-ui-mode-map
+          ([remap xref-find-definitions] . lsp-ui-peek-find-definitions)
+          ([remap xref-find-references] . lsp-ui-peek-find-references)
+          ("C-c u" . lsp-ui-imenu))
+    :init (setq lsp-ui-doc-enable t
+          lsp-ui-doc-use-webkit nil
+          lsp-ui-doc-header nil
+          lsp-ui-doc-delay 0.2
+          lsp-ui-doc-include-signature t
+          lsp-ui-doc-alignment 'at-point
+          lsp-ui-doc-use-childframe nil
+          lsp-ui-doc-border (face-foreground 'default)
+          lsp-ui-peek-enable t
+          lsp-ui-peek-show-directory t
+          lsp-ui-sideline-delay 10
+          lsp-ui-sideline-update-mode 'point
+          lsp-ui-sideline-enable t
+          lsp-ui-sideline-show-code-actions t
+          lsp-ui-sideline-show-hover t
+          lsp-ui-sideline-ignore-duplicate t
+          lsp-gopls-use-placeholders nil)
+    :config
+    (setq lsp-completion-provider :capf)
+    (setq lsp-idle-delay 0.500)
+    (setq lsp-print-performance t)
+
+    (add-to-list 'lsp-ui-doc-frame-parameters '(right-fringe . 8))
+
+    ;; `C-g'to close doc
+    (advice-add #'keyboard-quit :before #'lsp-ui-doc-hide)
+
+    ;; Reset `lsp-ui-doc-background' after loading theme
+    (add-hook 'after-load-theme-hook
+        (lambda ()
+          (setq lsp-ui-doc-border (face-foreground 'default))
+          (set-face-background 'lsp-ui-doc-background
+             (face-background 'tooltip))))
+
+    ;; WORKAROUND Hide mode-line of the lsp-ui-imenu buffer
+    ;; @see https://github.com/emacs-lsp/lsp-ui/issues/243
+    (defadvice lsp-ui-imenu (after hide-lsp-ui-imenu-mode-line activate)
+      (setq mode-line-format nil)))
+
+  (use-package lsp-ivy :commands lsp-ivy-workspace-symbol)
+  (use-package lsp-treemacs :commands lsp-treemacs-errors-list)
+
+  (setq lsp-ui-sideline-show-code-actions nil)
+  (setq lsp-ui-doc-enable nil)
+  ;;(use-package company-capf)
+
+  (use-package dap-mode
+    :after lsp-mode
+    :config
+    (dap-mode t)
+    (dap-ui-mode t))
+
+  ;;(require 'dap-python)
 #+end_src
 
 ** multiple-cursors
@@ -717,16 +771,17 @@ Flycheck provides 'on the fly' syntax checking for many languages. I've seen oth
     (web-mode-current-element-highlight-face ((t (:foreground nil :background "#3E4551" :underline t))))
     :custom
     (web-mode-enable-auto-pairing nil)
-    ;(web-mode-enable-auto-closing nil)
-    (web-mode-markup-indent-offset 2)
-    (web-mode-css-indent-offset 2)
-    (web-mode-code-indent-offset 2)
-    (web-mode-enable-css-coloraization t)
-    (web-mode-enable-current-element-highlight t))
+    (web-mode-enable-auto-indentation nil)
+    ;; (web-mode-markup-indent-offset 2)
+    ;; (web-mode-css-indent-offset 2)
+    ;; (web-mode-code-indent-offset 2)
+    ;;(web-mode-enable-css-coloraization t)
+    ;;(web-mode-enable-current-element-highlight t)
+    )
 
   (use-package emmet-mode
-    :init
-    (setq emmet-move-cursor-between-quotes t)
+    :custom
+    (emmet-move-cursor-between-quotes t)
     :hook (web-mode js-mode)
     ;; :config
     ;; (setq emmet-expand-jsx-className? t)
@@ -811,26 +866,18 @@ Flycheck provides 'on the fly' syntax checking for many languages. I've seen oth
 #+end_src
 ** Python
 #+begin_src emacs-lisp
-  (use-package python-mode
-    :mode "\\.py\\'"
-    :custom
-    (flycheck-python-pycompile-excecutable "python3")
-    (python-shell-interpreter "python3"))
+  (use-package elpy
+    :init
+    (elpy-enable))
+
+  (when (load "flycheck" t t)
+    (setq elpy-modules (delq 'elpy-module-flymake elpy-modules))
+    (add-hook 'elpy-mode-hook 'flycheck-mode))
 #+end_src
 
 #+begin_src emacs-lisp
-  (use-package virtualenvwrapper)
+;;  (use-package virtualenvwrapper)
 #+end_src
-
-*** LSP Python MS
-#+begin_src emacs-lisp
-   (use-package lsp-python-ms
-     :after lsp-mode python
-     :hook (python-mode . (lambda ()
-     (require 'lsp-python-ms)
-     (lsp))))
-#+end_src
-
 ** Typescript
 #+begin_src emacs-lisp
   (use-package typescript-mode
@@ -969,8 +1016,10 @@ Load up feeds with =elfeed-org=
 * Media
 ** pdf
 #+begin_src emacs-lisp
-(use-package pdf-tools
-  :mode ("\\.pdf\\'" . pdf-view-mode)
-  :config
-  (pdf-loader-install))
+  (use-package pdf-tools
+    :mode ("\\.pdf\\'" . pdf-view-mode)
+    :config
+    (pdf-tools-install)
+    (setq-default pdf-view-display-size 'fit-page)
+    )
 #+end_src
